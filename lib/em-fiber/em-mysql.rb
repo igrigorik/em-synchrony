@@ -34,9 +34,9 @@ module EventMachine
         def #{type}(query)
           f = Fiber.current
 
-          callback = Proc.new {|r| f.resume(r) }
-          errback  = Proc.new {|r| f.resume(r) }
-          EventedMysql.execute(query, :#{type}, callback, errback)
+          cb = Proc.new {|r| f.resume(r) }
+          eb = Proc.new {|r| f.resume(r) }
+          EventedMysql.execute(query, :#{type}, cb, eb)
 
           Fiber.yield
         end
