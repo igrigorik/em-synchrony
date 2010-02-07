@@ -4,6 +4,6 @@ require "rubygems"
 require "eventmachine"
 require "fiber"
 
-%w[ multi em-http ].each do |file|
+%w[ em-multi em-http em-mysql ].each do |file|
   require "em-fiber/#{file}"
 end

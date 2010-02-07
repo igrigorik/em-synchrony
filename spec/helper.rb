@@ -7,6 +7,8 @@ require 'lib/em-fiber'
 require 'tolerance_matcher'
 require 'stub-http-server'
 
+def now(); Time.now.to_f; end
+
 Spec::Runner.configure do |config|
   config.include(Sander6::CustomMatchers)
 end

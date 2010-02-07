@@ -3,8 +3,6 @@ require 'spec/helper'
 URL = "http://localhost:8081/"
 DELAY = 0.25
 
-def now(); Time.now.to_f; end
-
 describe EventMachine::HttpRequest do
   it "should fire sequential requests" do
     EventMachine.run do
