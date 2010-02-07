@@ -26,7 +26,7 @@ module EventMachine
     protected
     
       def check_progress
-        if (@responses[:succeeded].size + @responses[:failed].size) == @requests.size
+        if (@responses[:callback].size + @responses[:errback].size) == @requests.size
           succeed
 
           # continue processing
