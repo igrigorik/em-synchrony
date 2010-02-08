@@ -1,6 +1,7 @@
 require 'em-jack'
 
 # WANT: namespaced under EventMachine.. would be nice :-)
+# NOTE: no need for "pooling" since Beanstalk supports pipelining
 module EMJack
   class Connection
 
@@ -26,5 +27,4 @@ module EMJack
     end
 
   end
-
 end

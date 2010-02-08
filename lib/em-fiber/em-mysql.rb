@@ -1,33 +1,32 @@
+# install tmm1's gem to make this work
+# - http://github.com/tmm1/em-mysql/
+
 require 'em/mysql'
 
-module EventMachine
-  class Query
-    include EventMachine::Deferrable
-  end
-  
+module EventMachine  
   class MySQL
     def initialize(opt = {})
       options = {
         :host        => 'localhost',
         :database    => 'test',
         :port        => 3306,
-        :connections => 1,
+        :connections => 1, # Invalid 
         :on_error    => Proc.new {|e| p e; fail(e)},
         :logging     => false
       }.merge(opt)
       
-      EventedMysql.settings.update options
+      @mysql = EventedMysql.connect(options)
     end
 
     %w[select insert update raw].each do |type|
       class_eval %[
      
         def a#{type}(query)
-          q  = EventMachine::Query.new
+          q  = EventMachine::DefaultDeferrable.new
           cb = Proc.new {|r| q.succeed(r) }
           eb = Proc.new {|r| q.fail(r) }
           
-          EventedMysql.execute(query, :#{type}, cb, eb)          
+          @mysql.execute(query, :#{type}, cb, eb)          
           q
         end
         
@@ -36,7 +35,7 @@ module EventMachine
 
           cb = Proc.new {|r| f.resume(r) }
           eb = Proc.new {|r| f.resume(r) }
-          EventedMysql.execute(query, :#{type}, cb, eb)
+          @mysql.execute(query, :#{type}, cb, eb)
 
           Fiber.yield
         end
