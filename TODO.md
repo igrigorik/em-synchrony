@@ -1,17 +1,12 @@
-Stuff
------
+1. Fiber pool logic + EM-MysqlPlus?
+ * EM-MySQL pooled connections
 
-* Fiber pool logic
-* EM-MySQL pooled connections
-  * needs better API
-  * http://github.com/tmm1/em-mysql/network
-
-* Beanstalk pooled connections
+2. Beanstalk pooled connections
   * update API to allow per command errbacks
 
-* Memcached won't build
+3. Memcached specs
 
-
-* Multi interface: 
- - Show results, instead of the CB?
+4. Multi interface: 
+ * Show results, instead of the CB?
+ * Add names to multi handles
 

@@ -3,9 +3,9 @@ require 'spec'
 require 'pp'
 require 'em-http'
 
-require 'lib/em-fiber'
-require 'tolerance_matcher'
-require 'stub-http-server'
+require 'lib/em-synchrony'
+require 'helper/tolerance_matcher'
+require 'helper/stub-http-server'
 
 def now(); Time.now.to_f; end
 

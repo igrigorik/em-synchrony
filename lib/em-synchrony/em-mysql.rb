@@ -1,7 +1,5 @@
 # install tmm1's gem to make this work
-# - http://github.com/tmm1/em-mysql/
-
-require 'em/mysql'
+require 'em-mysqlplus'
 
 module EventMachine  
   class MySQL

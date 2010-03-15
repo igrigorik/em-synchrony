@@ -1,4 +1,4 @@
-require 'spec/helper'
+require "spec/helper/all"
 
 URL = "http://localhost:8081/"
 DELAY = 0.25
