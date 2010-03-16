@@ -1,7 +1,9 @@
 require 'rubygems'
 require 'spec'
 require 'pp'
+
 require 'em-http'
+require 'em-mysqlplus'
 
 require 'lib/em-synchrony'
 require 'helper/tolerance_matcher'

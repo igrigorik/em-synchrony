@@ -1,6 +1,5 @@
 module EventMachine
   class HttpRequest
-    
      %w[get head post delete put].each do |type|
        class_eval %[
          alias :a#{type} :#{type}
@@ -14,7 +13,6 @@ module EventMachine
             Fiber.yield  
          end
       ]
-    end
-    
+    end  
   end
 end
