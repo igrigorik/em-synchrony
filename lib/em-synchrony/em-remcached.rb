@@ -17,25 +17,28 @@ module Memcached
       Fiber.yield
     end
     
-    def aget(contents, &callback)      
-      df = EventMachine::DefaultDeferrable.new
-      df.callback &callback
+    %w[add get set delete].each do |type|
+      class_eval %[
+        def a#{type}(contents, &callback)      
+          df = EventMachine::DefaultDeferrable.new
+          df.callback &callback
       
-      cb = Proc.new { |res| df.succeed(res) }
-      operation Request::Get, contents, &cb
+          cb = Proc.new { |res| df.succeed(res) }
+          operation Request::#{type.capitalize}, contents, &cb
       
-      df
-    end
+          df
+        end
     
-    def get(contents, &callback)
-      fiber = Fiber.current
+        def #{type}(contents, &callback)
+          fiber = Fiber.current
       
-      df = aget(contents, &Proc.new { |res| fiber.resume(res) })
-      df.callback &callback
+          df = a#{type}(contents, &Proc.new { |res| fiber.resume(res) })
+          df.callback &callback
       
-      Fiber.yield
+          Fiber.yield
+        end
+      ]
     end
-    
     
     # def set(contents, &callback)
       # operation Request::Set, contents, &callback
