@@ -75,7 +75,6 @@ describe EventMachine::MySQL do
 
         start = now
 
-        # TODO: need pooling logic
         multi = EventMachine::Synchrony::Multi.new
         multi.add :a, db.aquery(QUERY)
         multi.add :b, db.aquery(QUERY)
