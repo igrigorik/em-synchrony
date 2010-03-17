@@ -10,8 +10,10 @@ Features:
  * Fiber aware connection pool with sync/async query support
  * Multi request interface which accepts any callback enabled client
  * Patches to EM clients:
+
   * em-http-request: .get, etc are synchronous, while .aget, etc are async
   * em-mysqlplus: .query is synchronous, while .aquery is async
+  * remcached: .get, etc, and .multi_* methods are synchronous
 
 ## Example with async em-http client:
 
