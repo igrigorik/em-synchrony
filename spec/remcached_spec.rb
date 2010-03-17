@@ -30,5 +30,22 @@ describe Memcached do
       }.resume
     end
   end
+  
+  it "should fire multi memcached requests" do
+    pending "remcached borked? opened a ticket"
+    
+    EventMachine.run do
+      Fiber.new {
+
+        Memcached.connect %w(localhost)
+        
+        Memcached.multi_get([{:key => 'foo'},{:key => 'bar'}, {:key => 'test'}]) do |res|
+          p res
+        end
+                
+        EventMachine.stop
+      }.resume
+    end
+  end
 
 end
