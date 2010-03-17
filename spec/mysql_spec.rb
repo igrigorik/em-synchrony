@@ -1,5 +1,6 @@
 require "spec/helper/all"
-require 'em-mysqlplus'
+require "em-mysqlplus"
+
 DELAY = 0.25
 QUERY = "select sleep(#{DELAY})"
 
@@ -8,7 +9,7 @@ describe EventMachine::MySQL do
   it "should fire sequential, synchronous requests" do
     EventMachine.run do
       Fiber.new {
-        db = EventMachine::MySQL.new(:host => "localhost")
+        db = EventMachine::MySQL.new(host: "localhost")
         start = now
         res = []
 
@@ -23,7 +24,7 @@ describe EventMachine::MySQL do
 
   it "should have accept a callback, errback on async queries" do
     EventMachine.run do
-      db = EventMachine::MySQL.new(:host => "localhost")
+      db = EventMachine::MySQL.new(host: "localhost")
 
       res = db.aquery(QUERY)
       res.errback {|r| fail }
@@ -37,16 +38,16 @@ describe EventMachine::MySQL do
   it "should fire simultaneous requests via Multi interface" do
     EventMachine.run do
 
-      db = EventMachine::Synchrony::ConnectionPool.new(:size => 2) do
-        EventMachine::MySQL.new(:host => "localhost")
+      db = EventMachine::Synchrony::ConnectionPool.new(size: 2) do
+        EventMachine::MySQL.new(host: "localhost")
       end
 
       Fiber.new {
         start = now
 
-        multi = EventMachine::Multi.new
-        multi.add db.aquery(QUERY)
-        multi.add db.aquery(QUERY)
+        multi = EventMachine::Synchrony::Multi.new
+        multi.add :a, db.aquery(QUERY)
+        multi.add :b, db.aquery(QUERY)
         res = multi.perform
 
         (now - start.to_f).should be_within(DELAY * 0.15).of(DELAY)
@@ -60,8 +61,8 @@ describe EventMachine::MySQL do
 
   it "should fire sequential and simultaneous MySQL requests" do
     EventMachine.run do
-      db = EventMachine::Synchrony::ConnectionPool.new(:size => 3) do
-        EventMachine::MySQL.new(:host => "localhost")
+      db = EventMachine::Synchrony::ConnectionPool.new(size: 3) do
+        EventMachine::MySQL.new(host: "localhost")
       end
 
       Fiber.new {
@@ -75,10 +76,10 @@ describe EventMachine::MySQL do
         start = now
 
         # TODO: need pooling logic
-        multi = EventMachine::Multi.new
-        multi.add db.aquery(QUERY)
-        multi.add db.aquery(QUERY)
-        multi.add db.aquery(QUERY)
+        multi = EventMachine::Synchrony::Multi.new
+        multi.add :a, db.aquery(QUERY)
+        multi.add :b, db.aquery(QUERY)
+        multi.add :c, db.aquery(QUERY)
         res = multi.perform
 
         (now - start.to_f).should be_within(DELAY * 0.15).of(DELAY)

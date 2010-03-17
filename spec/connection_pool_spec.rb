@@ -8,16 +8,16 @@ describe EventMachine::Synchrony::ConnectionPool do
   it "should queue requests if pool size is exceeded" do
     EventMachine.run do
 
-      db = EventMachine::Synchrony::ConnectionPool.new(:size => 1) do
-        EventMachine::MySQL.new(:host => "localhost")
+      db = EventMachine::Synchrony::ConnectionPool.new(size: 1) do
+        EventMachine::MySQL.new(host: "localhost")
       end
 
       Fiber.new {
         start = now
 
-        multi = EventMachine::Multi.new
-        multi.add db.aquery(QUERY)
-        multi.add db.aquery(QUERY)
+        multi = EventMachine::Synchrony::Multi.new
+        multi.add :a, db.aquery(QUERY)
+        multi.add :b, db.aquery(QUERY)
         res = multi.perform
 
         (now - start.to_f).should be_within(DELAY * 2 * 0.15).of(DELAY * 2)
@@ -32,16 +32,16 @@ describe EventMachine::Synchrony::ConnectionPool do
   it "should execute multiple async pool requests within same fiber" do
     EventMachine.run do
 
-      db = EventMachine::Synchrony::ConnectionPool.new(:size => 2) do
-        EventMachine::MySQL.new(:host => "localhost")
+      db = EventMachine::Synchrony::ConnectionPool.new(size: 2) do
+        EventMachine::MySQL.new(host: "localhost")
       end
 
       Fiber.new {
         start = now
 
-        multi = EventMachine::Multi.new
-        multi.add db.aquery(QUERY)
-        multi.add db.aquery(QUERY)
+        multi = EventMachine::Synchrony::Multi.new
+        multi.add :a, db.aquery(QUERY)
+        multi.add :b, db.aquery(QUERY)
         res = multi.perform
 
         (now - start.to_f).should be_within(DELAY * 0.15).of(DELAY)
@@ -56,8 +56,8 @@ describe EventMachine::Synchrony::ConnectionPool do
   it "should share connection pool between different fibers" do
     EventMachine.run do
 
-      db = EventMachine::Synchrony::ConnectionPool.new(:size => 2) do
-        EventMachine::MySQL.new(:host => "localhost")
+      db = EventMachine::Synchrony::ConnectionPool.new(size: 2) do
+        EventMachine::MySQL.new(host: "localhost")
       end
 
       Fiber.new {
@@ -87,8 +87,8 @@ describe EventMachine::Synchrony::ConnectionPool do
   it "should share connection pool between different fibers & async requests" do
     EventMachine.run do
 
-      db = EventMachine::Synchrony::ConnectionPool.new(:size => 5) do
-        EventMachine::MySQL.new(:host => "localhost")
+      db = EventMachine::Synchrony::ConnectionPool.new(size: 5) do
+        EventMachine::MySQL.new(host: "localhost")
       end
 
       Fiber.new {
@@ -99,9 +99,9 @@ describe EventMachine::Synchrony::ConnectionPool do
         2.times do |n|
           Fiber.new {
 
-            multi = EventMachine::Multi.new
-            multi.add db.aquery(QUERY)
-            multi.add db.aquery(QUERY)
+            multi = EventMachine::Synchrony::Multi.new
+            multi.add :a, db.aquery(QUERY)
+            multi.add :b, db.aquery(QUERY)
             results.push multi.perform
 
             fiber.transfer if results.size == 3

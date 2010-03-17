@@ -32,12 +32,12 @@ describe EventMachine::HttpRequest do
       Fiber.new {
         start = now
 
-        multi = EventMachine::Multi.new
-        multi.add EventMachine::HttpRequest.new(URL).aget
-        multi.add EventMachine::HttpRequest.new(URL).apost
-        multi.add EventMachine::HttpRequest.new(URL).ahead
-        multi.add EventMachine::HttpRequest.new(URL).adelete
-        multi.add EventMachine::HttpRequest.new(URL).aput
+        multi = EventMachine::Synchrony::Multi.new
+        multi.add :a, EventMachine::HttpRequest.new(URL).aget
+        multi.add :b, EventMachine::HttpRequest.new(URL).apost
+        multi.add :c, EventMachine::HttpRequest.new(URL).ahead
+        multi.add :d, EventMachine::HttpRequest.new(URL).adelete
+        multi.add :e, EventMachine::HttpRequest.new(URL).aput
         res = multi.perform
         
         (now - start.to_f).should be_within(DELAY * 0.15).of(DELAY)
