@@ -40,7 +40,7 @@ describe EventMachine::MySQL do
       db = EventMachine::Synchrony::ConnectionPool.new(:size => 2) do
         EventMachine::MySQL.new(:host => "localhost")
       end
-      
+
       Fiber.new {
         start = now
 
@@ -58,34 +58,36 @@ describe EventMachine::MySQL do
     end
   end
 
-  # it "should fire sequential and simultaneous MySQL requests" do
-  #   EventMachine.run do
-  #     db = EventMachine::MySQL.new(:host => 'localhost')
-  # 
-  #     Fiber.new {
-  #       start = now
-  #       res = []
-  # 
-  #       res.push db.query(QUERY)
-  #       res.push db.query(QUERY)
-  #       (now - start.to_f).should be_within(DELAY * res.size * 0.15).of(DELAY * res.size)
-  # 
-  #       start = now
-  # 
-  #       # TODO: need pooling logic
-  #       multi = EventMachine::Multi.new
-  #       multi.add db.aquery(QUERY)
-  #       multi.add db.aquery(QUERY)
-  #       multi.add db.aquery(QUERY)
-  #       res = multi.perform
-  # 
-  #       (now - start.to_f).should be_within(DELAY * 0.15).of(DELAY)
-  #       res.responses[:callback].size.should == 3
-  #       res.responses[:errback].size.should == 0
-  # 
-  #       EventMachine.stop
-  #     }.resume
-  #   end
-  # end
+  it "should fire sequential and simultaneous MySQL requests" do
+    EventMachine.run do
+      db = EventMachine::Synchrony::ConnectionPool.new(:size => 3) do
+        EventMachine::MySQL.new(:host => "localhost")
+      end
+
+      Fiber.new {
+        start = now
+        res = []
+
+        res.push db.query(QUERY)
+        res.push db.query(QUERY)
+        (now - start.to_f).should be_within(DELAY * res.size * 0.15).of(DELAY * res.size)
+
+        start = now
+
+        # TODO: need pooling logic
+        multi = EventMachine::Multi.new
+        multi.add db.aquery(QUERY)
+        multi.add db.aquery(QUERY)
+        multi.add db.aquery(QUERY)
+        res = multi.perform
+
+        (now - start.to_f).should be_within(DELAY * 0.15).of(DELAY)
+        res.responses[:callback].size.should == 3
+        res.responses[:errback].size.should == 0
+
+        EventMachine.stop
+      }.resume
+    end
+  end
 
 end
