@@ -1,4 +1,4 @@
-require 'em-jack'
+require "em-jack"
 
 # WANT: namespaced under EventMachine.. would be nice :-)
 # NOTE: no need for "pooling" since Beanstalk supports pipelining

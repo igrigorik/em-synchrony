@@ -1,3 +1,5 @@
+require "em-http"
+
 module EventMachine
   class HttpRequest
      %w[get head post delete put].each do |type|

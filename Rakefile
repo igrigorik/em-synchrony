@@ -1,7 +1,7 @@
-require 'rake'
+require "rake"
 
 begin
-  require 'jeweler'
+  require "jeweler"
   Jeweler::Tasks.new do |gemspec|
     gemspec.name = "em-synchrony"
     gemspec.summary = "Fiber aware EventMachine libraries"
@@ -10,7 +10,7 @@ begin
     gemspec.homepage = "http://github.com/igrigorik/em-synchrony"
     gemspec.authors = ["Ilya Grigorik"]
     gemspec.required_ruby_version = ">= 1.9"
-    gemspec.add_dependency('eventmachine', '>= 0.12.9')
+    gemspec.add_dependency("eventmachine", ">= 0.12.9")
     gemspec.rubyforge_project = "em-synchrony"
   end
 

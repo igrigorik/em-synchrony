@@ -1,3 +1,5 @@
+require "em-mysqlplus"
+
 module EventMachine
   class MySQL
 
