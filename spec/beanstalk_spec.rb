@@ -1,12 +1,14 @@
-require 'spec/helper'
+require 'spec/helper/all'
 
 DELAY = 0.25
 
+__END__
 describe EMJack do
 
   it "should fire sequential Beanstalk requests" do
+    pending
+    
     EventMachine.run do
-
       Fiber.new {
         jack = EMJack::Connection.new
 
@@ -19,8 +21,9 @@ describe EMJack do
   end
 
   it "should fire multiple requests in parallel" do
+    pending
+    
     EventMachine.run do
-
       Fiber.new {
         jack = EMJack::Connection.new
 

@@ -6,9 +6,10 @@ DELAY = 0.25
 describe EventMachine::HttpRequest do
   it "should fire sequential requests" do
     EventMachine.run do
-      @s = StubServer.new("HTTP/1.0 200 OK\r\nConnection: close\r\n\r\nFoo", DELAY)
 
       Fiber.new {
+        @s = StubServer.new("HTTP/1.0 200 OK\r\nConnection: close\r\n\r\nFoo", DELAY)
+        
         start = now
         order = []
         order.push :get  if EventMachine::HttpRequest.new(URL).get
@@ -20,6 +21,7 @@ describe EventMachine::HttpRequest do
         (now - start.to_f).should be_within(DELAY * order.size * 0.15).of(DELAY * order.size)
         order.should == [:get, :post, :head, :post, :put]
 
+        @s.stop
         EventMachine.stop
       }.resume
     end
@@ -27,9 +29,10 @@ describe EventMachine::HttpRequest do
 
   it "should fire simultaneous requests via Multi interface" do
     EventMachine.run do
-      @s = StubServer.new("HTTP/1.0 200 OK\r\nConnection: close\r\n\r\nFoo", DELAY)
 
       Fiber.new {
+        @s = StubServer.new("HTTP/1.0 200 OK\r\nConnection: close\r\n\r\nFoo", DELAY)
+        
         start = now
 
         multi = EventMachine::Synchrony::Multi.new
@@ -44,6 +47,7 @@ describe EventMachine::HttpRequest do
         res.responses[:callback].size.should == 5
         res.responses[:errback].size.should == 0
 
+        @s.stop
         EventMachine.stop
       }.resume
     end
