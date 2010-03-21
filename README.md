@@ -3,67 +3,79 @@
 Collection of convenience classes and patches to common EventMachine clients to 
 make them Fiber aware and friendly. Word of warning: even though fibers have been
 backported to Ruby 1.8.x, these classes assume Ruby 1.9 (if you're using fibers
-in production, you should be on 1.9 anyway) 
+in production, you should be on 1.9 anyway)
 
 Features:
 
  * Fiber aware connection pool with sync/async query support
  * Multi request interface which accepts any callback enabled client
+ * Fibered iterator to allow concurrency control & mixing of sync / async
  * em-http-request: .get, etc are synchronous, while .aget, etc are async
  * em-mysqlplus: .query is synchronous, while .aquery is async
  * remcached: .get, etc, and .multi_* methods are synchronous
 
 ## Example with async em-http client:
 
-	EventMachine.run do
-      Fiber.new {
-        res = EventMachine::HttpRequest.new("http://www.postrank.com").get
+	EventMachine.synchrony do
+      res = EventMachine::HttpRequest.new("http://www.postrank.com").get
 		
-		p "Look ma, no callbacks!"
-		p res
+	  p "Look ma, no callbacks!"
+	  p res
 
-        EventMachine.stop
-      }.resume
+      EventMachine.stop
     end
 
 ## Example with multi-request async em-http client:
 
-	EventMachine.run do
-	  Fiber.new {
-		
- 	    multi = EventMachine::Synchrony::Multi.new
-        multi.add :a, EventMachine::HttpRequest.new("http://www.postrank.com").aget
-        multi.add :b, EventMachine::HttpRequest.new("http://www.postrank.com").apost
-        res = multi.perform
-	
-		p "Look ma, no callbacks, and parallel requests!"
-		p res
-
-	    EventMachine.stop
-	  }.resume
+	EventMachine.synchrony do
+ 	  multi = EventMachine::Synchrony::Multi.new
+      multi.add :a, EventMachine::HttpRequest.new("http://www.postrank.com").aget
+      multi.add :b, EventMachine::HttpRequest.new("http://www.postrank.com").apost
+      res = multi.perform
+	 
+	  p "Look ma, no callbacks, and parallel HTTP requests!"
+	  p res
+     
+	  EventMachine.stop
 	end
 
 ## Example connection pool shared by a fiber:
 
-	EventMachine.run do
-
+	EventMachine.synchrony do
 	  db = EventMachine::Synchrony::ConnectionPool.new(size: 2) do
 	    EventMachine::MySQL.new(host: "localhost")
 	  end
 
-	  Fiber.new {
-	    start = now
+	  start = now
+      
+	  multi = EventMachine::Synchrony::Multi.new
+	  multi.add :a, db.aquery("select sleep(1)")
+	  multi.add :b, db.aquery("select sleep(1)")
+	  res = multi.perform
+      
+	  p "Look ma, no callbacks, and parallel MySQL requests!"
+	  p res
+      
+	  EventMachine.stop
+	end
+	
+## EM Iterator & mixing sync / async code
 
-	    multi = EventMachine::Synchrony::Multi.new
-	    multi.add :a, db.aquery("select sleep(1)")
-	    multi.add :b, db.aquery("select sleep(1)")
-	    res = multi.perform
+	EM.synchrony do
+	  concurrency = 2
+	  urls = ['http://url.1.com', 'http://url2.com']
 
-		p "Look ma, no callbacks, and parallel requests!"
-		p res
+	  # iterator will execute async blocks until completion, .each, .inject also work!
+	  results = EM::Synchrony::Iterator.new(urls, concurrency).map do |url, iter|
 
-	    EventMachine.stop
-	  }.resume
+		# fire async requests, on completion advance the iterator
+	    http = EventMachine::HttpRequest.new(url).aget
+	    http.callback { iter.return(http) }
+	  end
+
+	  p results # all completed requests
+  
+	  EventMachine.stop
 	end
 
 # License
