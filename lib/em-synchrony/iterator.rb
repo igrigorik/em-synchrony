@@ -23,21 +23,28 @@ module EventMachine
 
       def map(&block)
         fiber = Fiber.current
-        after = Proc.new {|result| p [:after_map, result]; fiber.resume(result)}
-        
-        Fiber.yield super(block, after)
+        result = nil
+
+        after = Proc.new {|res| result = res; fiber.resume }
+        super(block, after)
+
+        Fiber.yield
+        result
       end
 
-      def inject(obj, &block)
-        fiber = Fiber.current
-        after = Proc.new {|result| p [:after_inject, result]; fiber.resume(result)}
-        super(obj, block, after)
-        Fiber.yield 
-      end
-      
-      # original iterator method for map support
-      def inject(obj, foreach, after)
-        super(obj, foreach, after)
+      def inject(obj, foreach = nil, after = nil, &block)
+        if foreach and after
+          super(obj, foreach, after)
+        else
+          fiber = Fiber.current
+          result = nil
+
+          after = Proc.new {|res| result = res; fiber.resume}
+          super(obj, block, after)
+
+          Fiber.yield
+          result
+        end
       end
 
     end
