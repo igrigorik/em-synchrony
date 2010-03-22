@@ -1,5 +1,7 @@
 # EM-Synchrony
 
+http://www.igvita.com/2010/03/22/untangling-evented-code-with-ruby-fibers
+
 Collection of convenience classes and patches to common EventMachine clients to 
 make them Fiber aware and friendly. Word of warning: even though fibers have been
 backported to Ruby 1.8.x, these classes assume Ruby 1.9 (if you're using fibers
@@ -25,40 +27,6 @@ Features:
       EventMachine.stop
     end
 
-## Example with multi-request async em-http client:
-
-	EventMachine.synchrony do
- 	  multi = EventMachine::Synchrony::Multi.new
-      multi.add :a, EventMachine::HttpRequest.new("http://www.postrank.com").aget
-      multi.add :b, EventMachine::HttpRequest.new("http://www.postrank.com").apost
-      res = multi.perform
-	 
-	  p "Look ma, no callbacks, and parallel HTTP requests!"
-	  p res
-     
-	  EventMachine.stop
-	end
-
-## Example connection pool shared by a fiber:
-
-	EventMachine.synchrony do
-	  db = EventMachine::Synchrony::ConnectionPool.new(size: 2) do
-	    EventMachine::MySQL.new(host: "localhost")
-	  end
-
-	  start = now
-      
-	  multi = EventMachine::Synchrony::Multi.new
-	  multi.add :a, db.aquery("select sleep(1)")
-	  multi.add :b, db.aquery("select sleep(1)")
-	  res = multi.perform
-      
-	  p "Look ma, no callbacks, and parallel MySQL requests!"
-	  p res
-      
-	  EventMachine.stop
-	end
-	
 ## EM Iterator & mixing sync / async code
 
 	EM.synchrony do
@@ -74,10 +42,45 @@ Features:
 	  end
 
 	  p results # all completed requests
-  
+
 	  EventMachine.stop
 	end
 
+## Example connection pool shared by a fiber:
+
+	EventMachine.synchrony do
+	  db = EventMachine::Synchrony::ConnectionPool.new(size: 2) do
+	    EventMachine::MySQL.new(host: "localhost")
+	  end
+
+	  start = now
+
+	  multi = EventMachine::Synchrony::Multi.new
+	  multi.add :a, db.aquery("select sleep(1)")
+	  multi.add :b, db.aquery("select sleep(1)")
+	  res = multi.perform
+
+	  p "Look ma, no callbacks, and parallel MySQL requests!"
+	  p res
+
+	  EventMachine.stop
+	end
+
+
+## Example with multi-request async em-http client:
+
+	EventMachine.synchrony do
+ 	  multi = EventMachine::Synchrony::Multi.new
+      multi.add :a, EventMachine::HttpRequest.new("http://www.postrank.com").aget
+      multi.add :b, EventMachine::HttpRequest.new("http://www.postrank.com").apost
+      res = multi.perform
+	 
+	  p "Look ma, no callbacks, and parallel HTTP requests!"
+	  p res
+     
+	  EventMachine.stop
+	end
+	
 # License
 
 (The MIT License)
