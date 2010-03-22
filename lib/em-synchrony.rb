@@ -5,11 +5,12 @@ require "eventmachine"
 require "fiber"
 
 require "em-synchrony/em-multi"
+# require "em-synchrony/iterator" # iterators are not release in EM yet
+require "em-synchrony/connection_pool"
+
 require "em-synchrony/em-http"
 require "em-synchrony/em-mysql"
 require "em-synchrony/em-remcached"
-
-require "em-synchrony/connection_pool"
 
 module EventMachine
 
