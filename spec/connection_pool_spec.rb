@@ -107,7 +107,7 @@ describe EventMachine::Synchrony::ConnectionPool do
             fiber.transfer if results.size == 3
           }.resume
         end
-        
+
         Fiber.new {
           # execute a synchronous requests
           results.push db.query(QUERY)

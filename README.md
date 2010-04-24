@@ -15,10 +15,10 @@ Features:
  * em-http-request: .get, etc are synchronous, while .aget, etc are async
  * em-mysqlplus: .query is synchronous, while .aquery is async
  * remcached: .get, etc, and .multi_* methods are synchronous
- * bitly: api calls synchronous with HttpRequest.
+ * bitly: synchronous api calls with EM::HttpRequest.
 
 ## Example with async em-http client:
-
+    require "em-synchrony/em-http"
     EventMachine.synchrony do
         res = EventMachine::HttpRequest.new("http://www.postrank.com").get
         p "Look ma, no callbacks!"
@@ -29,6 +29,7 @@ Features:
 
 ## EM Iterator & mixing sync / async code
 
+    require "em-synchrony/em-http"
     EM.synchrony do
         concurrency = 2
         urls = ['http://url.1.com', 'http://url2.com']
@@ -47,6 +48,7 @@ Features:
 
 ## Example connection pool shared by a fiber:
 
+    require "em-synchrony/em-mysqlplus"
     EventMachine.synchrony do
         db = EventMachine::Synchrony::ConnectionPool.new(size: 2) do
             EventMachine::MySQL.new(host: "localhost")
@@ -65,6 +67,7 @@ Features:
 
 ## Example with multi-request async em-http client:
 
+    require "em-synchrony/em-http"
     EventMachine.synchrony do
         multi = EventMachine::Synchrony::Multi.new
         multi.add :a, EventMachine::HttpRequest.new("http://www.postrank.com").aget
@@ -79,13 +82,14 @@ Features:
 
 ## Example with async Bitly client:
 
-      EM.synchrony do
+    require "em-synchrony/em-bitly"
+    EM.synchrony do
         bitly = Bitly.new('[INSERT_LOGIN]', '[INSERT_API_KEY]')
         url = 'http://github.com/igrigorik/em-synchrony'
         short = bitly.shorten(url)
 
         p "Short #{url} => #{short.jmp_url}"
-      end
+    end
 
 # License
 

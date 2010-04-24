@@ -1,27 +1,26 @@
-require 'bitly'
-require 'eventmachine'
-require 'fiber'
-require 'em-synchrony/em-http'
+begin
+  require "em-synchrony/em-http"
+  require "bitly"
+rescue LoadError => error
+  raise "Missing EM-Synchrony dependencies: gem install em-http-request; gem install bitly -v=0.4.0"
+end
 
 module Bitly
-  module Utils   
-    #Be Aware suported only version Bitly-0.4.0.
-	#In next version (in branch) of Bitly library interface changed.
-    def get_result(request)      
+  module Utils
+    def get_result(request)
       http = EventMachine::HttpRequest.new(request).get(:timeout => 100)
-      
-      result = if(http.response_header.status == 200)
+
+      result = if (http.response_header.status == 200)
         Crack::JSON.parse(http.response)
       else
         {'errorMessage' => 'JSON Parse Error(Bit.ly messed up)', 'errorCode' => 69, 'statusCode' => 'ERROR'}
-      end			
-      
-      if 'OK'==result['statusCode'] 
+      end
+
+      if 'OK' == result['statusCode']
         result['results']
       else
         raise BitlyError.new(result['errorMessage'],result['errorCode'])
       end
     end
-    
   end
 end

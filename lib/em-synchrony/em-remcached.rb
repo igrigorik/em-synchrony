@@ -1,4 +1,8 @@
-require "remcached"
+begin
+  require "remcached"
+rescue LoadError => error
+  raise "Missing EM-Synchrony dependency: gem install remcached"
+end
 
 module Memcached
   class << self
@@ -45,19 +49,19 @@ module Memcached
          def amulti_#{type}(contents, &callback)
            df = EventMachine::DefaultDeferrable.new
            df.callback &callback
-    
+
            cb = Proc.new { |res| df.succeed(res) }
            multi_operation Request::#{type.capitalize}, contents, &cb
-    
+
              df
          end
-    
+
          def multi_#{type}(contents, &callback)
            fiber = Fiber.current
-    
+
            df = amulti_#{type}(contents, &Proc.new { |res| fiber.resume(res) })
            df.callback &callback
-    
+
            Fiber.yield
          end
        ]

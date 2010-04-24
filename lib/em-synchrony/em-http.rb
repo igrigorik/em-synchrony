@@ -1,4 +1,8 @@
-require "em-http"
+begin
+  require "em-http"
+rescue LoadError => error
+  raise "Missing EM-Synchrony dependency: gem install em-http-request"
+end
 
 module EventMachine
   class HttpRequest
@@ -12,9 +16,9 @@ module EventMachine
             conn.callback { f.resume(conn) }
             conn.errback  { f.resume(conn) }
 
-            Fiber.yield  
+            Fiber.yield
          end
       ]
-    end  
+    end
   end
 end

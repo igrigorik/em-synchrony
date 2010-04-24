@@ -1,4 +1,8 @@
-require "em-jack"
+begin
+  require "em-jack"
+rescue LoadError => error
+  raise "Missing EM-Synchrony dependency: gem install em-jack"
+end
 
 # WANT: namespaced under EventMachine.. would be nice :-)
 # NOTE: no need for "pooling" since Beanstalk supports pipelining
@@ -18,11 +22,11 @@ module EMJack
 
       @used_tube = tube
       @conn.send(:use, tube)
-      
+
       # WANT: Add conditional on add_deferrable to either accept two procs, or a single block
       #       .. two procs = callback, errback
       add_deferrable { |r| f.resume(r) }
-      
+
       Fiber.yield
     end
 

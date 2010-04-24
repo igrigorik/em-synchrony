@@ -1,6 +1,5 @@
 $:.unshift(File.dirname(__FILE__) + '/../lib')
 
-require "rubygems"
 require "eventmachine"
 
 begin
@@ -10,12 +9,8 @@ rescue LoadError => error
 end
 
 require "em-synchrony/em-multi"
-# require "em-synchrony/iterator" # iterators are not release in EM yet
 require "em-synchrony/connection_pool"
-
-require "em-synchrony/em-http"
-require "em-synchrony/em-mysql"
-require "em-synchrony/em-remcached"
+# require "em-synchrony/iterator" # iterators are not release in EM yet
 
 module EventMachine
 
