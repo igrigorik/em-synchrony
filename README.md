@@ -1,8 +1,8 @@
 # EM-Synchrony
 
-http://www.igvita.com/2010/03/22/untangling-evented-code-with-ruby-fibers
+Blog post: [Untangling Evented Code with Ruby Fibers](http://www.igvita.com/2010/03/22/untangling-evented-code-with-ruby-fibers)
 
-Collection of convenience classes and patches to common EventMachine clients to 
+Collection of convenience classes and patches to common EventMachine clients to
 make them Fiber aware and friendly. Word of warning: even though fibers have been
 backported to Ruby 1.8.x, these classes assume Ruby 1.9 (if you're using fibers
 in production, you should be on 1.9 anyway)
@@ -18,69 +18,64 @@ Features:
 
 ## Example with async em-http client:
 
-	EventMachine.synchrony do
-      res = EventMachine::HttpRequest.new("http://www.postrank.com").get
-		
-	  p "Look ma, no callbacks!"
-	  p res
+    EventMachine.synchrony do
+        res = EventMachine::HttpRequest.new("http://www.postrank.com").get
+        p "Look ma, no callbacks!"
+        p res
 
-      EventMachine.stop
+        EventMachine.stop
     end
 
 ## EM Iterator & mixing sync / async code
 
-	EM.synchrony do
-	  concurrency = 2
-	  urls = ['http://url.1.com', 'http://url2.com']
+    EM.synchrony do
+        concurrency = 2
+        urls = ['http://url.1.com', 'http://url2.com']
 
-	  # iterator will execute async blocks until completion, .each, .inject also work!
-	  results = EM::Synchrony::Iterator.new(urls, concurrency).map do |url, iter|
+        # iterator will execute async blocks until completion, .each, .inject also work!
+        results = EM::Synchrony::Iterator.new(urls, concurrency).map do |url, iter|
 
-		# fire async requests, on completion advance the iterator
-	    http = EventMachine::HttpRequest.new(url).aget
-	    http.callback { iter.return(http) }
-	  end
+            # fire async requests, on completion advance the iterator
+            http = EventMachine::HttpRequest.new(url).aget
+            http.callback { iter.return(http) }
+        end
 
-	  p results # all completed requests
-
-	  EventMachine.stop
-	end
+        p results # all completed requests
+        EventMachine.stop
+    end
 
 ## Example connection pool shared by a fiber:
 
-	EventMachine.synchrony do
-	  db = EventMachine::Synchrony::ConnectionPool.new(size: 2) do
-	    EventMachine::MySQL.new(host: "localhost")
-	  end
+    EventMachine.synchrony do
+        db = EventMachine::Synchrony::ConnectionPool.new(size: 2) do
+            EventMachine::MySQL.new(host: "localhost")
+        end
 
-	  start = now
+        multi = EventMachine::Synchrony::Multi.new
+        multi.add :a, db.aquery("select sleep(1)")
+        multi.add :b, db.aquery("select sleep(1)")
+        res = multi.perform
 
-	  multi = EventMachine::Synchrony::Multi.new
-	  multi.add :a, db.aquery("select sleep(1)")
-	  multi.add :b, db.aquery("select sleep(1)")
-	  res = multi.perform
+        p "Look ma, no callbacks, and parallel MySQL requests!"
+        p res
 
-	  p "Look ma, no callbacks, and parallel MySQL requests!"
-	  p res
-
-	  EventMachine.stop
-	end
-
+        EventMachine.stop
+    end
 
 ## Example with multi-request async em-http client:
 
-	EventMachine.synchrony do
- 	  multi = EventMachine::Synchrony::Multi.new
-      multi.add :a, EventMachine::HttpRequest.new("http://www.postrank.com").aget
-      multi.add :b, EventMachine::HttpRequest.new("http://www.postrank.com").apost
-      res = multi.perform
-	 
-	  p "Look ma, no callbacks, and parallel HTTP requests!"
-	  p res
-     
-	  EventMachine.stop
-	end
-	
+    EventMachine.synchrony do
+        multi = EventMachine::Synchrony::Multi.new
+        multi.add :a, EventMachine::HttpRequest.new("http://www.postrank.com").aget
+        multi.add :b, EventMachine::HttpRequest.new("http://www.postrank.com").apost
+        res = multi.perform
+
+        p "Look ma, no callbacks, and parallel HTTP requests!"
+        p res
+
+        EventMachine.stop
+    end
+
 # License
 
 (The MIT License)
