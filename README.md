@@ -15,7 +15,7 @@ Features:
  * em-http-request: .get, etc are synchronous, while .aget, etc are async
  * em-mysqlplus: .query is synchronous, while .aquery is async
  * remcached: .get, etc, and .multi_* methods are synchronous
- * bitly: synchronous api calls with EM::HttpRequest.
+ * bitly v2 and v3: synchronous api calls with EM::HttpRequest.
 
 ## Example with async em-http client:
     require "em-synchrony/em-http"
@@ -80,7 +80,7 @@ Features:
         EventMachine.stop
     end
 
-## Example with async Bitly client:
+## Example with async Bitly client API v2:
 
     require "em-synchrony/em-bitly"
     EM.synchrony do
@@ -90,7 +90,24 @@ Features:
 
         p "Short #{url} => #{short.jmp_url}"
     end
+	
+## Example with async Bitly client API v3:
 
+    require "em-synchrony/em-bitly"
+	
+	Bitly.use_api_version_3
+	
+    EM.synchrony do
+        bitly = Bitly.new('[INSERT_LOGIN]', '[INSERT_API_KEY]')
+        
+		url = 'http://github.com/igrigorik/em-synchrony'
+		domain='nyti.ms'
+		
+        pro = bitly.bitly_pro_domain(domain)
+        p "Domain #{domain} pro=#{pro}"
+    end	
+
+	
 # License
 
 (The MIT License)
