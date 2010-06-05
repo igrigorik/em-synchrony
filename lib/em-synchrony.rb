@@ -10,7 +10,7 @@ end
 
 require "em-synchrony/em-multi"
 require "em-synchrony/connection_pool"
-# require "em-synchrony/iterator" # iterators are not release in EM yet
+require "em-synchrony/iterator" # iterators are not release in EM yet
 
 module EventMachine
 
