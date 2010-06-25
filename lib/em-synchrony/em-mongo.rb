@@ -8,10 +8,10 @@ module EM
   module Mongo
 
     class Connection
-      def initialize(host = DEFAULT_IP, port = DEFAULT_PORT, timeout = nil)
+      def initialize(host = DEFAULT_IP, port = DEFAULT_PORT, timeout = nil, opts = {})
         f = Fiber.current
 
-        @em_connection = EMConnection.connect(host, port, timeout)
+        @em_connection = EMConnection.connect(host, port, timeout, opts)
         @db = {}
 
         # establish connection before returning
