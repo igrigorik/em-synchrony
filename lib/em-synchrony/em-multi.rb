@@ -13,7 +13,7 @@ module EventMachine
       def add(name, conn)
         fiber = Fiber.current
         conn.callback { @responses[:callback][name] = conn; check_progress(fiber) }
-        conn.errback  { @responses[:errback][name] = conn;  check_progress(fiber) }
+        conn.errback  { @responses[:errback][name]  = conn; check_progress(fiber) }
 
         @requests.push(conn)
       end
