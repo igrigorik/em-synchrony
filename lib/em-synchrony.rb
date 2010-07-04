@@ -24,4 +24,29 @@ module EventMachine
     self.run(context, tail)
   end
 
+  module Synchrony
+
+    # sync is a close relative to inclineCallbacks from Twisted (Python)
+    #
+    # Synchrony.sync allows you to write sequential code while using asynchronous
+    # or callback-based methods under the hood. Example:
+    #
+    # result = EM::Synchrony.sync EventMachine::HttpRequest.new(URL).get
+    # p result.response
+    #
+    # As long as the asynchronous function returns a Deferrable object, which
+    # has a "callback" and an "errback", the sync methond will automatically
+    # yield and automatically resume your code (via Fibers) when the call
+    # either succeeds or fails. You do not need to patch or modify the
+    # Deferrable object, simply pass it to EM::Synchrony.sync
+    #
+    def self.sync(df)
+      f = Fiber.current
+      df.callback { |r| f.resume(r) }
+      df.errback { |r| f.resume(r) }
+
+      Fiber.yield
+    end
+  end
+
 end
