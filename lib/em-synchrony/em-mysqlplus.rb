@@ -1,4 +1,5 @@
 begin
+  require "mysqlplus"
   require "em-mysqlplus"
 rescue LoadError => error
   raise "Missing EM-Synchrony dependency: gem install em-mysqlplus"
@@ -17,7 +18,9 @@ module EventMachine
 
       @connection.execute(sql, cb, eb)
 
-      Fiber.yield
+      result = Fiber.yield
+      raise result if Mysql::Error == result.class
+      result
     end
 
   end

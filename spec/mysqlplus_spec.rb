@@ -1,4 +1,5 @@
 require "spec/helper/all"
+require "mysqlplus"
 require "em-mysqlplus"
 
 DELAY = 0.25
@@ -80,6 +81,16 @@ describe EventMachine::MySQL do
       res.responses[:callback].size.should == 3
       res.responses[:errback].size.should == 0
 
+      EventMachine.stop
+    end
+  end
+
+  it "should raise Mysql::Error in case of error" do
+    EventMachine.synchrony do
+      db = EventMachine::MySQL.new(host: "localhost")
+      proc {
+        db.query("SELECT * FROM i_hope_this_table_does_not_exist;")
+      }.should raise_error(Mysql::Error)
       EventMachine.stop
     end
   end
