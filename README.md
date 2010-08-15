@@ -17,6 +17,7 @@ Features:
  * em-mysqlplus: .query is synchronous, while .aquery is async
  * remcached: .get, etc, and .multi_* methods are synchronous
  * em-mongo: .find, .first are synchronous
+ * mongoid: all functions are synchronous
  * bitly v2 and v3: synchronous api calls with EM::HttpRequest.
 
 ## Example with async em-http client:
