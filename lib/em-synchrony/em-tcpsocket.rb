@@ -1,3 +1,5 @@
+require 'em-synchrony'
+
 module EventMachine
   class TCPSocket < Connection
     class << self
@@ -7,62 +9,91 @@ module EventMachine
           _old_new *args
         else
           socket = EventMachine::connect( *args[0..1], self )
-          socket.sync  # wait for connection
+          raise SocketError  unless socket.sync(:in)  # wait for connection
+          socket
         end
       end
     end
 
-    def initialize( *args )
-      super
-      @in_buff = ''
+    def post_init
+      @in_buff, @out_buff = '', ''
       @want_bytes = 0
-      @req = nil
+      @in_req = @out_req = nil
+    end
+
+    # direction must be one of :in or :out
+    def sync( direction )
+      req = self.instance_variable_set "@#{direction.to_s}_req", EventMachine::DefaultDeferrable.new
+      EventMachine::Synchrony.sync req
     end
 
     # TCPSocket interface
     def setsockopt( level, name, value )
     end
 
-    # TODO: add streaming output
     def send( msg, flags = 0 )
-      raise "Unknown flags: #{flags}"  if flags.nonzero?
-      send_data msg
+      raise "Unknown flags in send(): #{flags}"  if flags.nonzero?
+      len = msg.bytesize
+      write_data(msg) or sync(:out) or raise(IOError)
+      len
     end
 
     def recv( num_bytes )
-      get_bytes(num_bytes) || sync
+      read_data(num_bytes) or sync(:in) or raise(IOError)
     end
 
     def close
       close_connection true
+      @in_req = @out_req = nil
     end
 
     # EventMachine interface
     def connection_completed
-      @req.succeed self
+      @in_req.succeed self
     end
 
-    def receive_data( data = '' )
+    def unbind
+      @in_req.fail nil  if @in_req
+      @out_req.fail nil  if @out_req
+    end
+
+    def receive_data( data )
       @in_buff << data
-      if @req && (data = get_bytes)
-        @req.succeed data
+      if @in_req && (data = read_data)
+        @in_req.succeed data
       end
     end
 
-    def get_bytes( want = nil )
+protected
+    def read_data( want = nil )
       @want_bytes = want  if want
+
       if @want_bytes <= @in_buff.size
-        bytes = @in_buff.slice!(0, @want_bytes)
+        data = @in_buff.slice!(0, @want_bytes)
         @want_bytes = 0
-        bytes
+        data
       else
         nil
       end
     end
 
-    def sync
-      @req = EventMachine::DefaultDeferrable.new
-      EventMachine::Synchrony.sync( @req )
+    def write_data( data = nil )
+      @out_buff += data  if data
+
+      loop do
+        if @out_buff.empty?
+          @out_req.succeed true  if @out_req
+          return true
+        end
+
+        if self.get_outbound_data_size > EventMachine::FileStreamer::BackpressureLevel
+          EventMachine::next_tick { write_data }
+          return false
+        else
+          len = [@out_buff.bytesize, EventMachine::FileStreamer::ChunkSize].min
+          self.send_data @out_buff.slice!( 0, len )
+        end
+      end
     end
   end
 end
