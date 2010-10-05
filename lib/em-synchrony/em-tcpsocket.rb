@@ -41,6 +41,7 @@ module EventMachine
     def recv( num_bytes )
       read_data(num_bytes) or sync(:in) or raise(IOError)
     end
+    alias_method :read, :recv
 
     def close
       close_connection true
