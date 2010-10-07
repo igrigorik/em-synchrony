@@ -11,7 +11,7 @@ module EventMachine
 
       class ConditionVariable
         def wait( mutex )
-          @deferrable = EventMachine::Deferrable.new
+          @deferrable = EventMachine::DefaultDeferrable.new
           EventMachine::Synchrony.sync @deferrable
           @deferrable = nil
         end
