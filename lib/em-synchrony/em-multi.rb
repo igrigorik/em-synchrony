@@ -30,7 +30,7 @@ module EventMachine
 
         def check_progress(fiber)
           if finished?
-            succeed
+            @responses[:errback].empty? ? succeed : fail
 
             # continue processing
             fiber.resume(self) if fiber.alive? && fiber != Fiber.current
