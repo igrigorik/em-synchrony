@@ -29,7 +29,7 @@ module EventMachine
             succeed
 
             # continue processing
-            fiber.resume(self)
+            fiber.resume(self) if fiber.alive? && fiber != Fiber.current
           end
         end
     end
