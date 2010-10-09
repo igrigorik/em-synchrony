@@ -18,18 +18,22 @@ module EventMachine
         @requests.push(conn)
       end
 
+      def finished?
+        (@responses[:callback].size + @responses[:errback].size) == @requests.size
+      end
+
       def perform
-        Fiber.yield
+        Fiber.yield unless finished?
       end
 
       protected
 
         def check_progress(fiber)
-          if (@responses[:callback].size + @responses[:errback].size) == @requests.size
-            succeed
+          if finished?
+            @responses[:errback].empty? ? succeed : fail
 
             # continue processing
-            fiber.resume(self)
+            fiber.resume(self) if fiber.alive? && fiber != Fiber.current
           end
         end
     end
