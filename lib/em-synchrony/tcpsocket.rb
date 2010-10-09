@@ -7,16 +7,21 @@ module EventMachine
           _old_new *args
         else
           socket = EventMachine::connect( *args[0..1], self )
-          raise SocketError  unless socket.sync(:in)  # wait for connection
+          raise SocketError unless socket.sync(:in)  # wait for connection
           socket
         end
       end
+      alias :open :new
     end
 
     def post_init
       @in_buff, @out_buff = '', ''
       @want_bytes = 0
       @in_req = @out_req = nil
+    end
+
+    def closed?
+      @in_req.nil? && @out_req.nil?
     end
 
     # direction must be one of :in or :out
@@ -35,11 +40,13 @@ module EventMachine
       write_data(msg) or sync(:out) or raise(IOError)
       len
     end
+    alias_method :write, :send
 
     def recv( num_bytes )
       read_data(num_bytes) or sync(:in) or raise(IOError)
     end
     alias_method :read, :recv
+    alias_method :read_nonblock, :recv
 
     def close
       close_connection true
@@ -53,7 +60,7 @@ module EventMachine
 
     def unbind
       @in_req.fail nil  if @in_req
-      @out_req.fail nil  if @out_req
+      @out_req.fail nil if @out_req
     end
 
     def receive_data( data )
@@ -65,9 +72,9 @@ module EventMachine
 
 protected
     def read_data( want = nil )
-      @want_bytes = want  if want
+      @want_bytes = want if want
 
-      if @want_bytes <= @in_buff.size
+      if @in_buff.size > 0
         data = @in_buff.slice!(0, @want_bytes)
         @want_bytes = 0
         data
