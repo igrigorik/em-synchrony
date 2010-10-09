@@ -7,8 +7,8 @@ end
 # monkey-patch Mongo to use em-synchrony's socket and thread classs
 silence_warnings do
   class Mongo::Connection
-    TCPSocket = ::EM::TCPSocket
-    Mutex = ::EM::Synchrony::Thread::Mutex
-    ConditionVariable = ::EM::Synchrony::Thread::ConditionVariable
+    TCPSocket = ::EventMachine::Synchrony::TCPSocket
+    Mutex = ::Eventmachine::Synchrony::Thread::Mutex
+    ConditionVariable = ::EventMachine::Synchrony::Thread::ConditionVariable
   end
 end
