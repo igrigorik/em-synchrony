@@ -2,7 +2,7 @@ begin
   require "mysqlplus"
   require "em-mysqlplus"
 rescue LoadError => error
-  raise "Missing EM-Synchrony dependency: gem install em-mysqlplus"
+  raise "Missing EM-Synchrony dependency: gem install mysqlplus, gem install em-mysqlplus"
 end
 
 module EventMachine
