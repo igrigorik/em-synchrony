@@ -43,7 +43,7 @@ module EventMachine
         end
 
         # Release connection assigned to the supplied fiber and
-        # resume any other pending connections (which will 
+        # resume any other pending connections (which will
         # immediately try to run acquire on the pool)
         def release(fiber)
           @available.push(@reserved.delete(fiber.object_id))
@@ -73,7 +73,7 @@ module EventMachine
               df.callback { release(fiber) }
               df.errback { release(fiber) }
             end
-            
+
             df
           end
         end

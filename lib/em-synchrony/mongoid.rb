@@ -1,4 +1,4 @@
-require 'em-synchrony/mongo'
+require "em-synchrony/mongo"
 
 # disable mongoid connection initializer
 if defined? Rails

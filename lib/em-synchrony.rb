@@ -8,7 +8,9 @@ rescue LoadError => error
   raise error unless defined? Fiber
 end
 
+require "em-synchrony/thread"
 require "em-synchrony/em-multi"
+require "em-synchrony/tcpsocket"
 require "em-synchrony/connection_pool"
 require "em-synchrony/iterator"  unless EventMachine::VERSION == '0.12.10'
 

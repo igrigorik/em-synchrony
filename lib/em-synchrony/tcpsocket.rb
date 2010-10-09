@@ -1,5 +1,3 @@
-require 'em-synchrony'
-
 module EventMachine
   class TCPSocket < Connection
     class << self

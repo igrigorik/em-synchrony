@@ -1,4 +1,4 @@
-require 'lib/em-synchrony/em-tcpsocket'
+require "spec/helper/all"
 
 describe EventMachine::TCPSocket  do
   it 'connects to a TCP port'  do
