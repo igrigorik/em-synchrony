@@ -8,7 +8,7 @@ end
 silence_warnings do
   class Mongo::Connection
     TCPSocket = ::EventMachine::Synchrony::TCPSocket
-    Mutex = ::Eventmachine::Synchrony::Thread::Mutex
+    Mutex = ::EventMachine::Synchrony::Thread::Mutex
     ConditionVariable = ::EventMachine::Synchrony::Thread::ConditionVariable
   end
 end
