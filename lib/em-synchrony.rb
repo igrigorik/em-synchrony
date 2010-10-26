@@ -49,6 +49,13 @@ module EventMachine
 
       Fiber.yield
     end
+
+    # a Fiber-aware sleep function using an EM timer
+    def self.sleep( secs )
+      fiber = Fiber.current
+      EM::Timer.new(secs) {  fiber.resume  }
+      Fiber.yield
+    end
   end
 
 end
