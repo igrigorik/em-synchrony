@@ -15,6 +15,13 @@ require 'helper/stub-http-server'
 
 def now(); Time.now.to_f; end
 
+def silence_warnings()
+  old_verbose, $VERBOSE = $VERBOSE, nil
+  yield
+ensure
+  $VERBOSE = old_verbose
+end
+
 RSpec.configure do |config|
   config.include(Sander6::CustomMatchers)
 end
