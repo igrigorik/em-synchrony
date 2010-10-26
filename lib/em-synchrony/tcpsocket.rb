@@ -41,11 +41,11 @@ module EventMachine
       end
       alias_method :write, :send
 
-      def recv(num_bytes = 16*1024)
-        read_data(num_bytes) or sync(:in) or raise(IOError)
+      def read(num_bytes = 16*1024, dest = nil)
+        read_data(num_bytes, dest) or sync(:in) or raise(IOError)
       end
-      alias_method :read, :recv
-      alias_method :read_nonblock, :recv
+      alias_method :read_nonblock, :read
+      alias_method :recv, :read
 
       def close
         close_connection true
@@ -70,11 +70,17 @@ module EventMachine
       end
 
       protected
-        def read_data(want = nil)
-          @want_bytes = want  if want
+        def read_data(num_bytes = nil, dest = nil)
+          @read_bytes = num_bytes  if num_bytes
+          @read_dest = dest  if dest
           if @in_buff.size > 0
-            data = @in_buff.slice!(0, @want_bytes)
-            @want_bytes = 0
+            data = @in_buff.slice!(0, @read_bytes)
+            @read_bytes = 0
+
+            if @read_dest
+              @read_dest.replace data
+              @read_dest = nil
+            end
             data
           else
             nil
