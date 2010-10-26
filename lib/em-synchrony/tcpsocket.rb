@@ -41,7 +41,7 @@ module EventMachine
       end
       alias_method :write, :send
 
-      def recv(num_bytes)
+      def recv(num_bytes = 16*1024)
         read_data(num_bytes) or sync(:in) or raise(IOError)
       end
       alias_method :read, :recv
@@ -70,9 +70,12 @@ module EventMachine
       end
 
       protected
-        def read_data(want = 16*1024)
+        def read_data(want = nil)
+          @want_bytes = want  if want
           if @in_buff.size > 0
-            @in_buff.slice!(0, want)
+            data = @in_buff.slice!(0, @want_bytes)
+            @want_bytes = 0
+            data
           else
             nil
           end
