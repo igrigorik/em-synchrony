@@ -1,37 +1,28 @@
 # EM-Synchrony
 
-Blog post: [Untangling Evented Code with Ruby Fibers](http://www.igvita.com/2010/03/22/untangling-evented-code-with-ruby-fibers)
-
-Collection of convenience classes and patches to common EventMachine clients to
-make them Fiber aware and friendly. Word of warning: even though fibers have been
-backported to Ruby 1.8.x, these classes assume Ruby 1.9 (if you're using fibers
-in production, you should be on 1.9 anyway)
-
-Features:
+Collection of convenience classes and primitives to help untangle evented code, plus a number of patched EM clients to make them Fiber aware. To learn more, please see: [Untangling Evented Code with Ruby Fibers](http://www.igvita.com/2010/03/22/untangling-evented-code-with-ruby-fibers). Word of warning: even though Fibers have been backported to Ruby 1.8.x, these classes assume Ruby 1.9.x (if you're using fibers in production, you should be on 1.9.x anyway).
 
  * Fiber aware connection pool with sync/async query support
- * Multi request interface which accepts any callback enabled client
- * Fibered iterator to allow concurrency control & mixing of sync / async
- * Replacements for (some) socket and thread classes
+ * Fiber aware iterator to allow concurrency control & mixing of sync / async
+ * Fiber aware async inline support: turns any async function into sync
+ * Fiber aware multi-request interface for any callback enabled clients
+ * Fiber aware TCPSocket replacement, powered by EventMachine
+ * Fiber aware Thread, Mutex, ConditionVariable clases
+ * Fiber aware sleep
+
+Supported clients:
+
  * em-http-request: .get, etc are synchronous, while .aget, etc are async
+ * em-memcached & remcached: .get, etc, and .multi_* methods are synchronous
+ * em-redis: synchronous connect, .a{cmd} are async
  * em-mysqlplus: .query is synchronous, while .aquery is async
- * remcached: .get, etc, and .multi_* methods are synchronous
  * em-mongo: .find, .first are synchronous
- * mongo: patches driver to make all functions synchronous
  * mongoid: all functions synchronous, plus Rails compatability
  * bitly v2 and v3: synchronous api calls with EM::HttpRequest.
 
-## Example with async em-http client:
-    require "em-synchrony/em-http"
-    EventMachine.synchrony do
-        res = EventMachine::HttpRequest.new("http://www.postrank.com").get
-        p "Look ma, no callbacks!"
-        p res
 
-        EventMachine.stop
-    end
-
-## EM Iterator & mixing sync / async code
+## Fiber-aware Iterator: mixing sync / async code
+Allows you to perform each, map, inject on a collection of any asynchronous tasks. To advance the iterator, simply call iter.next, or iter.return(result). The iterator will not exit until you advance through the entire collection. Additionally, you can specify the desired concurrency level! Ex: crawling a web-site, but you want to have at most 5 connections open at any one time.
 
     require "em-synchrony/em-http"
     EM.synchrony do
@@ -50,7 +41,8 @@ Features:
         EventMachine.stop
     end
 
-## Example connection pool shared by a fiber:
+## Fiber-aware ConnectionPool shared by a fiber:
+Allows you to create a pool of resources which are then shared by one or more fibers. A good example is a collection of long-lived database connections. The pool will automatically block and wake up the fibers as the connections become available.
 
     require "em-synchrony/em-mysqlplus"
     EventMachine.synchrony do
@@ -69,7 +61,8 @@ Features:
         EventMachine.stop
     end
 
-## Example with multi-request async em-http client:
+## Fiber-aware Multi inteface: parallel HTTP requests
+Allows you to fire simultaneous requests and wait for all of them to complete (success or error) before advancing. Concurrently fetching many HTTP pages at once is a good example; parallel SQL queries is another. Technically, this functionality can be also achieved by using the Synchrony Iterator shown above.
 
     require "em-synchrony/em-http"
     EventMachine.synchrony do
@@ -83,6 +76,44 @@ Features:
 
         EventMachine.stop
     end
+
+## Fiber-aware & EventMachine backed TCPSocket:
+This is dangerous territory - you've been warned. You can patch your base TCPSocket class to make any/all libraries depending on TCPSocket be actually powered by EventMachine and Fibers under the hood.
+
+    require "lib/em-synchrony"
+    require "net/http"
+
+    EM.synchrony do
+      # replace default Socket code to use EventMachine Sockets instead
+      TCPSocket = EventMachine::Synchrony::TCPSocket
+
+      Net::HTTP.get_print 'www.google.com', '/index.html'
+      EM.stop
+    end
+
+## Inline synchronization & Fiber sleep:
+Allows you to inline/synchronize any callback interface to behave as if it was a blocking call. Simply pass any callback object to Synchrony.sync and it will do the right thing: the fiber will be resumed once the callback/errback fires. Likewise, use Synchrony.sleep to avoid blocking the main thread if you need to put one of your workers to sleep.
+
+    EM.synchrony do
+      # pass a callback enabled client to sync to automatically resume it when callback fires
+      result = EM::Synchrony.sync EventMachine::HttpRequest.new('http://www.gooogle.com/').aget
+      p result
+
+      # pause exection for 2 seconds
+      EM::Synchrony.sleep(2)
+
+      EM.stop
+    end
+
+## Patched clients
+
+EM-Synchrony ships with a number of patched Eventmachine clients, which allow you to patch your asynchronous drivers on the fly to behave as if they were actually blocking clients:
+
+ * [em-http-request](http://github.com/igrigorik/em-synchrony/blob/master/spec/http_spec.rb)
+ * [em-mysqlplus](http://github.com/igrigorik/em-synchrony/blob/master/spec/mysqlplus_spec.rb)
+ * [em-redis](http://github.com/igrigorik/em-synchrony/blob/master/spec/redis_spec.rb)
+ * [em-memcached](http://github.com/igrigorik/em-synchrony/blob/master/spec/memcache_spec.rb) & [remcached](http://github.com/igrigorik/em-synchrony/blob/master/spec/remcached_spec.rb)
+ * [em-mongo](http://github.com/igrigorik/em-synchrony/blob/master/spec/em-mongo_spec.rb) & [mongoid](http://github.com/igrigorik/em-synchrony/blob/master/spec/mongo_spec.rb)
 
 # License
 
