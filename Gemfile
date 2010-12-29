@@ -10,6 +10,6 @@ group :development do
   gem 'bson_ext'
   gem 'mysqlplus'
   gem 'em-mysqlplus'
-  gem 'em-redis'
+  gem 'em-redis', '~> 0.3.0'
   gem 'mongo'
 end

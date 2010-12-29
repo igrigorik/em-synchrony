@@ -21,13 +21,15 @@ module EventMachine
 
         Fiber.yield
       end
-
+      
+      alias :old_call_command :call_command
+      
       def call_command(argv, &blk)
         # async commands are 'a' prefixed, but do check
         # for the 'add' command corner case (ugh)
         if argv.first.size > 3 && argv.first[0] == 'a'
           argv[0] = argv[0].to_s.slice(1,argv[0].size)
-          callback { raw_call_command(argv, &blk) }
+          old_call_command(argv, &blk)
 
         else
           # wrap response blocks into fiber callbacks
@@ -36,7 +38,7 @@ module EventMachine
           blk = proc { |v| v } if !block_given?
           clb = proc { |v| f.resume(blk.call(v)) }
 
-          callback { raw_call_command(argv, &clb) }
+          old_call_command(argv, &clb)
           Fiber.yield
         end
       end
