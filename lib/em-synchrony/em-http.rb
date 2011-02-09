@@ -5,7 +5,7 @@ rescue LoadError => error
 end
 
 module EventMachine
-  class HttpRequest
+  module HTTPMethods
      %w[get head post delete put].each do |type|
        class_eval %[
          alias :a#{type} :#{type}

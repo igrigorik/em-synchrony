@@ -4,6 +4,18 @@ URL = "http://localhost:8081/"
 DELAY = 0.25
 
 describe EventMachine::HttpRequest do
+  it "should perform a synchronous fetch" do
+    EM.synchrony do
+      s = StubServer.new("HTTP/1.0 200 OK\r\nConnection: close\r\n\r\nFoo", DELAY)
+
+      r = EventMachine::HttpRequest.new(URL).get
+      r.response.should == 'Foo'
+
+      s.stop
+      EventMachine.stop
+    end
+  end
+
   it "should fire sequential requests" do
     EventMachine.synchrony do
       s = StubServer.new("HTTP/1.0 200 OK\r\nConnection: close\r\n\r\nFoo", DELAY)

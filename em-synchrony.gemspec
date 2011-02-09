@@ -13,7 +13,6 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "em-synchrony"
 
-  s.required_ruby_version = Gem::Requirement.new(">= 1.9")
   s.add_runtime_dependency("eventmachine", [">= 0.12.9"])
 
   s.files         = `git ls-files`.split("\n")
