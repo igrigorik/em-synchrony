@@ -12,7 +12,7 @@ require "em-synchrony/thread"
 require "em-synchrony/em-multi"
 require "em-synchrony/tcpsocket"
 require "em-synchrony/connection_pool"
-require "em-synchrony/iterator"  if EventMachine::VERSION >= '0.12.10'
+require "em-synchrony/iterator"  if EventMachine::VERSION > '0.12.10'
 
 module EventMachine
 
