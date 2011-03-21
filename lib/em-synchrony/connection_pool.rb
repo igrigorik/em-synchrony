@@ -48,7 +48,7 @@ module EventMachine
         def release(fiber)
           @available.push(@reserved.delete(fiber.object_id))
 
-          if pending = @pending.pop
+          if pending = @pending.shift
             pending.resume
           end
         end
