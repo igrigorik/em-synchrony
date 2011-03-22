@@ -23,6 +23,19 @@ describe EM::Protocols::Redis do
     end
   end
 
+  it "should mapped_mget synchronously" do
+    EventMachine.synchrony do
+      redis = EM::Protocols::Redis.connect
+
+      redis.set('mmget1', 'value1')
+      redis.set('mmget3', 'value3')
+      redis.mapped_mget('mmget1', 'mmget2', 'mmget3').should ==
+          { 'mmget1' => 'value1', 'mmget3' => 'value3' }
+
+      EM.stop
+    end
+  end
+
   it "should incr/decr key synchronously" do
     EventMachine.synchrony do
       redis = EM::Protocols::Redis.connect
@@ -59,6 +72,19 @@ describe EM::Protocols::Redis do
             resp.to_i.should == 2
             EM.stop
           end
+        end
+      end
+    end
+  end
+
+  it "should execute async mapped_mget" do
+   EventMachine.synchrony do
+      redis = EM::Protocols::Redis.connect
+
+      redis.aset('some_key', 'some_value') do
+        redis.amapped_mget('some_key', 'some_other_key') do |values|
+          values.should == { 'some_key' => 'some_value' }
+          EM.stop
         end
       end
     end

@@ -42,6 +42,29 @@ module EventMachine
           Fiber.yield
         end
       end
+
+      # adapted from em-redis' implementation to use
+      # the asynchronous version of mget
+      def amapped_mget(*keys)
+        self.amget(*keys) do |response|
+          result = {}
+          response.each do |value|
+            key = keys.shift
+            result.merge!(key => value) unless value.nil?
+          end
+          yield result if block_given?
+        end
+      end
+
+      def mapped_mget(*keys)
+        f = Fiber.current
+
+        self.amapped_mget(*keys) do |values|
+          f.resume(values)
+        end
+
+        Fiber.yield
+      end
     end
   end
 end
