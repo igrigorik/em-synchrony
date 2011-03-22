@@ -21,9 +21,9 @@ module EventMachine
 
         Fiber.yield
       end
-      
+
       alias :old_call_command :call_command
-      
+
       def call_command(argv, &blk)
         # async commands are 'a' prefixed, but do check
         # for the 'add' command corner case (ugh)
