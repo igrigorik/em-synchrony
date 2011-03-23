@@ -24,10 +24,10 @@ module EventMachine
 
       alias :old_call_command :call_command
 
+      SYNC = ['add', 'auth']
       def call_command(argv, &blk)
-        # async commands are 'a' prefixed, but do check
-        # for the 'add' command corner case (ugh)
-        if argv.first.size > 3 && argv.first[0] == 'a'
+        # async commands are 'a' prefixed
+        if (argv.first[0] == 'a') && !SYNC.include?(argv.first.to_s)
           argv[0] = argv[0].to_s.slice(1,argv[0].size)
           old_call_command(argv, &blk)
 

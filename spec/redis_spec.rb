@@ -30,7 +30,7 @@ describe EM::Protocols::Redis do
       redis.set('mmget1', 'value1')
       redis.set('mmget3', 'value3')
       redis.mapped_mget('mmget1', 'mmget2', 'mmget3').should ==
-          { 'mmget1' => 'value1', 'mmget3' => 'value3' }
+        { 'mmget1' => 'value1', 'mmget3' => 'value3' }
 
       EM.stop
     end
@@ -78,7 +78,7 @@ describe EM::Protocols::Redis do
   end
 
   it "should execute async mapped_mget" do
-   EventMachine.synchrony do
+    EventMachine.synchrony do
       redis = EM::Protocols::Redis.connect
 
       redis.aset('some_key', 'some_value') do
@@ -87,6 +87,19 @@ describe EM::Protocols::Redis do
           EM.stop
         end
       end
+    end
+  end
+
+  it "should execute sync add and auth" do
+    EventMachine.synchrony do
+      redis = EM::Protocols::Redis.connect
+      redis.auth('abc')
+
+      redis.delete('key')
+      redis.add('key', 'value')
+      redis.scard('key').should == 1
+
+      EM.stop
     end
   end
 end
