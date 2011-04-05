@@ -20,7 +20,7 @@ describe EM::Mongo do
       collection.remove({}) # nuke all keys in collection
 
       obj = collection.insert('hello' => 'world')
-      obj.keys.should include '_id'
+      obj.should be_a(BSON::ObjectId)
 
       obj = collection.find
       obj.size.should == 1
@@ -30,7 +30,7 @@ describe EM::Mongo do
     end
   end
 
-  it "should insert a record into db" do
+  it "should insert a record into db and be able to find it" do
     EventMachine.synchrony do
       collection = EM::Mongo::Connection.new.db('db').collection('test')
       collection.remove({}) # nuke all keys in collection
@@ -51,15 +51,38 @@ describe EM::Mongo do
     end
   end
 
+  it "should be able to order results" do
+    EventMachine.synchrony do
+      collection = EM::Mongo::Connection.new.db('db').collection('test')
+      collection.remove({}) # nuke all keys in collection
+
+      collection.insert(:name => 'one', :position => 0)
+      collection.insert(:name => 'three', :position => 2)
+      collection.insert(:name => 'two', :position => 1)
+
+      res = collection.find({}, {:order => 'position'})
+      res[0]["name"].should == 'one'
+      res[1]["name"].should == 'two'
+      res[2]["name"].should == 'three'
+
+      res1 = collection.find({}, {:order => [:position, :desc]})
+      res1[0]["name"].should == 'three'
+      res1[1]["name"].should == 'two'
+      res1[2]["name"].should == 'one'
+
+      EventMachine.stop
+    end
+  end
+
   it "should update records in db" do
     EventMachine.synchrony do
       collection = EM::Mongo::Connection.new.db('db').collection('test')
       collection.remove({}) # nuke all keys in collection
 
-      obj = collection.insert('hello' => 'world')
+      obj_id = collection.insert('hello' => 'world')
       collection.update({'hello' => 'world'}, {'hello' => 'newworld'})
 
-      new_obj = collection.first({'_id' => obj['_id']})
+      new_obj = collection.first({'_id' => obj_id})
       new_obj['hello'].should == 'newworld'
 
       EventMachine.stop

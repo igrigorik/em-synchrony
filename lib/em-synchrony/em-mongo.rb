@@ -30,8 +30,9 @@ module EM
 
         skip  = opts.delete(:skip) || 0
         limit = opts.delete(:limit) || 0
+        order = opts.delete(:order)
 
-        @connection.find(@name, skip, limit, selector, nil, &cb)
+        @connection.find(@name, skip, limit, order, selector, nil, &cb)
         Fiber.yield
       end
 
