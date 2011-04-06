@@ -62,11 +62,11 @@ module EventMachine
         # once it is complete (assumption: fiber will yield until
         # data is available, or request is complete)
         #
-        def method_missing(method, *args)
+        def method_missing(method, *args, &blk)
           async = (method[0,1] == "a")
 
           execute(async) do |conn|
-            df = conn.send(method, *args)
+            df = conn.send(method, *args, &blk)
 
             if async
               fiber = Fiber.current
