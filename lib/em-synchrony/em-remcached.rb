@@ -30,42 +30,68 @@ module Memcached
           cb = Proc.new { |res| df.succeed(res) }
           operation Request::#{type.capitalize}, contents, &cb
 
-            df
+          df
         end
 
         def #{type}(contents, &callback)
           fiber = Fiber.current
+          results = {}
 
-          df = a#{type}(contents, &Proc.new { |res| fiber.resume(res) })
+          cb = Proc.new do |res|
+            if res[:status] && res[:status] == Errors::DISCONNECTED
+              results = res
+            else
+              fiber.resume(res)
+            end
+          end
+
+          df = a#{type}(contents, &cb)
           df.callback &callback
 
-          Fiber.yield
+          if !results.empty?
+            results
+          else
+            Fiber.yield
+          end
         end
       ]
     end
 
     %w[add get set delete].each do |type|
-       class_eval %[
-         def amulti_#{type}(contents, &callback)
-           df = EventMachine::DefaultDeferrable.new
-           df.callback &callback
+      class_eval %[
+        def amulti_#{type}(contents, &callback)
+          df = EventMachine::DefaultDeferrable.new
+          df.callback &callback
 
-           cb = Proc.new { |res| df.succeed(res) }
-           multi_operation Request::#{type.capitalize}, contents, &cb
+          cb = Proc.new { |res| df.succeed(res) }
+          multi_operation Request::#{type.capitalize}, contents, &cb
 
-             df
-         end
+          df
+        end
 
-         def multi_#{type}(contents, &callback)
-           fiber = Fiber.current
+        def multi_#{type}(contents, &callback)
+          fiber = Fiber.current
+          results = {}
 
-           df = amulti_#{type}(contents, &Proc.new { |res| fiber.resume(res) })
-           df.callback &callback
+          cb = Proc.new do |res|
+            if res[:status] && res[:status] == Errors::DISCONNECTED
+              results = res
+            else
+              fiber.resume(res)
+            end
+          end
 
-           Fiber.yield
-         end
-       ]
-     end
+          df = amulti_#{type}(contents, &cb)
+          df.callback &callback
+
+          if !results.empty?
+            results
+          else
+            Fiber.yield
+          end
+        end
+      ]
+    end
 
   end
 end
