@@ -11,14 +11,18 @@ module Memcached
       Memcached.servers = servers
 
       f = Fiber.current
+      @w = EM::Timer.new(10.0) { f.resume :error }
       @t = EM::PeriodicTimer.new(0.01) do
         if Memcached.usable?
+          @w.cancel
           @t.cancel
           f.resume(self)
         end
       end
 
-      Fiber.yield
+      r = Fiber.yield
+
+      (r == :error) ? (raise Exception.new('Cannot connect to memcached server')) : r
     end
 
     %w[add get set delete].each do |type|
