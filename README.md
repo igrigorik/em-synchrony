@@ -35,6 +35,7 @@ Allows you to perform each, map, inject on a collection of any asynchronous task
             # fire async requests, on completion advance the iterator
             http = EventMachine::HttpRequest.new(url).aget
             http.callback { iter.return(http) }
+            http.errback { iter.return(http) }
         end
 
         p results # all completed requests
