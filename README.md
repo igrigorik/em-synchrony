@@ -17,6 +17,7 @@ Supported clients:
  * em-redis: synchronous connect, .a{cmd} are async
  * em-mysqlplus: .query is synchronous, while .aquery is async
  * em-mongo: .find, .first are synchronous
+ * mysql2: .query is synchronous, while .aquery is async
  * mongoid: all functions synchronous, plus Rails compatability
  * bitly v2 and v3: synchronous api calls with EM::HttpRequest.
 
