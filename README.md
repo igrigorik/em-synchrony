@@ -20,10 +20,11 @@ Supported clients:
  * mongoid: all functions synchronous, plus Rails compatability
  * bitly v2 and v3: synchronous api calls with EM::HttpRequest.
 
-
 ## Fiber-aware Iterator: mixing sync / async code
+
 Allows you to perform each, map, inject on a collection of any asynchronous tasks. To advance the iterator, simply call iter.next, or iter.return(result). The iterator will not exit until you advance through the entire collection. Additionally, you can specify the desired concurrency level! Ex: crawling a web-site, but you want to have at most 5 connections open at any one time.
 
+    require "em-synchrony"
     require "em-synchrony/em-http"
     EM.synchrony do
         concurrency = 2
@@ -45,6 +46,7 @@ Allows you to perform each, map, inject on a collection of any asynchronous task
 ## Fiber-aware ConnectionPool shared by a fiber:
 Allows you to create a pool of resources which are then shared by one or more fibers. A good example is a collection of long-lived database connections. The pool will automatically block and wake up the fibers as the connections become available.
 
+    require "em-synchrony"
     require "em-synchrony/em-mysqlplus"
     EventMachine.synchrony do
         db = EventMachine::Synchrony::ConnectionPool.new(size: 2) do
@@ -65,6 +67,7 @@ Allows you to create a pool of resources which are then shared by one or more fi
 ## Fiber-aware Multi inteface: parallel HTTP requests
 Allows you to fire simultaneous requests and wait for all of them to complete (success or error) before advancing. Concurrently fetching many HTTP pages at once is a good example; parallel SQL queries is another. Technically, this functionality can be also achieved by using the Synchrony Iterator shown above.
 
+    require "em-synchrony"
     require "em-synchrony/em-http"
     EventMachine.synchrony do
         multi = EventMachine::Synchrony::Multi.new
@@ -81,6 +84,7 @@ Allows you to fire simultaneous requests and wait for all of them to complete (s
 ## Fiber-aware & EventMachine backed TCPSocket:
 This is dangerous territory - you've been warned. You can patch your base TCPSocket class to make any/all libraries depending on TCPSocket be actually powered by EventMachine and Fibers under the hood.
 
+    require "em-synchrony"
     require "lib/em-synchrony"
     require "net/http"
 
@@ -95,6 +99,8 @@ This is dangerous territory - you've been warned. You can patch your base TCPSoc
 ## Inline synchronization & Fiber sleep:
 Allows you to inline/synchronize any callback interface to behave as if it was a blocking call. Simply pass any callback object to Synchrony.sync and it will do the right thing: the fiber will be resumed once the callback/errback fires. Likewise, use Synchrony.sleep to avoid blocking the main thread if you need to put one of your workers to sleep.
 
+    require "em-synchrony"
+    require "em-synchrony/em-http"
     EM.synchrony do
       # pass a callback enabled client to sync to automatically resume it when callback fires
       result = EM::Synchrony.sync EventMachine::HttpRequest.new('http://www.gooogle.com/').aget
