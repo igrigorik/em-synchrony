@@ -39,24 +39,21 @@ module Memcached
 
         def #{type}(contents, &callback)
           fiber = Fiber.current
-          results = {}
+          paused = false
 
           cb = Proc.new do |res|
-            if res[:status] && res[:status] == Errors::DISCONNECTED
-              results = res
-            else
+            if paused
               fiber.resume(res)
+            else
+              return res
             end
           end
 
           df = a#{type}(contents, &cb)
           df.callback &callback
 
-          if !results.empty?
-            results
-          else
-            Fiber.yield
-          end
+          paused = true
+          Fiber.yield
         end
       ]
     end
@@ -78,21 +75,18 @@ module Memcached
           results = {}
 
           cb = Proc.new do |res|
-            if res[:status] && res[:status] == Errors::DISCONNECTED
-              results = res
-            else
+            if paused
               fiber.resume(res)
+            else
+              return res
             end
           end
 
           df = amulti_#{type}(contents, &cb)
           df.callback &callback
 
-          if !results.empty?
-            results
-          else
-            Fiber.yield
-          end
+          paused = true
+          Fiber.yield
         end
       ]
     end
