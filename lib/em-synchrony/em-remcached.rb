@@ -72,7 +72,7 @@ module Memcached
 
         def multi_#{type}(contents, &callback)
           fiber = Fiber.current
-          results = {}
+          paused = false
 
           cb = Proc.new do |res|
             if paused
