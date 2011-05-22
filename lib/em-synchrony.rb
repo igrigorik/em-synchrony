@@ -51,11 +51,22 @@ module EventMachine
     end
 
     # a Fiber-aware sleep function using an EM timer
-    def self.sleep( secs )
+    def self.sleep(secs)
       fiber = Fiber.current
-      EM::Timer.new(secs) {  fiber.resume  }
+      EM::Timer.new(secs) { fiber.resume }
       Fiber.yield
     end
-  end
 
+    def self.add_timer(interval, &blk)
+      EM.add_timer(interval) do
+        Fiber.new { blk.call }.resume
+      end
+    end
+
+    def self.add_periodic_timer(interval, &blk)
+      EM.add_periodic_timer(interval) do
+        Fiber.new { blk.call }.resume
+      end
+    end
+  end
 end
