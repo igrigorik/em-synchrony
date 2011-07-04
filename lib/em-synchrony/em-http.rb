@@ -1,5 +1,5 @@
 begin
-  require "em-http"
+  require "em-http-request"
 rescue LoadError => error
   raise "Missing EM-Synchrony dependency: gem install em-http-request"
 end

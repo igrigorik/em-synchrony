@@ -6,7 +6,7 @@ end
 
 module EventMachine
   module Hiredis
-    class Client
+    class Connection
       attr_reader :connected
 
       def self.connect(host = 'localhost', port = 6379)
