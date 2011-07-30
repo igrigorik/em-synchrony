@@ -68,7 +68,7 @@ EventMachine.synchrony do
 end
 ```
 
-## Fiber-aware Multi inteface: parallel HTTP requests
+## Fiber-aware Multi interface: parallel HTTP requests
 Allows you to fire simultaneous requests and wait for all of them to complete (success or error) before advancing. Concurrently fetching many HTTP pages at once is a good example; parallel SQL queries is another. Technically, this functionality can be also achieved by using the Synchrony Iterator shown above.
 
 ```ruby
