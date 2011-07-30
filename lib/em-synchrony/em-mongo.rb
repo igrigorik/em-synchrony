@@ -21,26 +21,38 @@ module EM
     end
 
     class Collection
+      #
+      # em-mongo version > 0.3.6
+      #
+      if defined?(EM::Mongo::Cursor)
+        raise "Doesn't work yet on Mongo versions that use cursor'ed find!"
 
-      alias :afind :find
-      def find(selector={}, opts={})
+      #
+      # em-mongo version <= 0.3.6
+      #
+      else
 
-        f = Fiber.current
-        cb = proc { |res| f.resume(res) }
+        alias :afind :find
+        def find(selector={}, opts={})
 
-        skip  = opts.delete(:skip) || 0
-        limit = opts.delete(:limit) || 0
-        order = opts.delete(:order)
+          f = Fiber.current
+          cb = proc { |res| f.resume(res) }
 
-        @connection.find(@name, skip, limit, order, selector, nil, &cb)
-        Fiber.yield
+          skip  = opts.delete(:skip) || 0
+          limit = opts.delete(:limit) || 0
+          order = opts.delete(:order)
+
+          @connection.find(@name, skip, limit, order, selector, nil, &cb)
+          Fiber.yield
+        end
+
+        alias :afirst :first
+        def first(selector={}, opts={})
+          opts[:limit] = 1
+          find(selector, opts).first
+        end
       end
 
-      alias :afirst :first
-      def first(selector={}, opts={})
-        opts[:limit] = 1
-        find(selector, opts).first
-      end
     end
 
   end
