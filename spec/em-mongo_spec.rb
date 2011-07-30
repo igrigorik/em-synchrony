@@ -80,8 +80,6 @@ describe EM::Mongo do
   # em-mongo version > 0.3.6
   #
   if defined?(EM::Mongo::Cursor)
-    puts "(specs) New Mongo!"
-
     describe '*A*synchronously (afind & afirst) [Mongo > 0.3.6, using cursor]' do
       it "should insert a record into db" do
         EventMachine.synchrony do
@@ -150,8 +148,6 @@ describe EM::Mongo do
     end
 
   else
-    puts "(specs) Old Mongo!"
-
     describe '*A*synchronously (afind & afirst) [Mongo <= 0.3.6, using blocks]' do
       it "should insert a record into db" do
         EventMachine.synchrony do
