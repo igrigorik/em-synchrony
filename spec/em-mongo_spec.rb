@@ -13,7 +13,7 @@ describe EM::Mongo do
     end
   end
 
-  describe 'synchronously (find & first)' do
+  describe 'Synchronously (find & first)' do
     it "should insert a record into db" do
       EventMachine.synchrony do
         collection = EM::Mongo::Connection.new.db('db').collection('test')
@@ -73,6 +73,151 @@ describe EM::Mongo do
         EventMachine.stop
       end
     end
+  end
+
+
+  #
+  # em-mongo version > 0.3.6
+  #
+  if defined?(EM::Mongo::Cursor)
+    puts "(specs) New Mongo!"
+
+    describe '*A*synchronously (afind & afirst) [Mongo > 0.3.6, using cursor]' do
+      it "should insert a record into db" do
+        EventMachine.synchrony do
+          collection = EM::Mongo::Connection.new.db('db').collection('test')
+          collection.remove({}) # nuke all keys in collection
+
+          obj = collection.insert('hello' => 'world')
+          obj.should be_a(BSON::ObjectId)
+
+          cursor = collection.afind
+          cursor.should be_a(EM::Mongo::Cursor)
+          cursor.to_a.callback do |obj|
+            obj.size.should == 1
+            obj.first['hello'].should == 'world'
+            EM.next_tick{ EventMachine.stop }
+          end
+        end
+      end
+
+      it "should insert a record into db and be able to find it" do
+        EventMachine.synchrony do
+          collection = EM::Mongo::Connection.new.db('db').collection('test')
+          collection.remove({}) # nuke all keys in collection
+
+          obj = collection.insert('hello' => 'world')
+          obj = collection.insert('hello2' => 'world2')
+
+          collection.afind({}).to_a.callback do |obj|
+            obj.size.should == 2
+          end
+          collection.afind({}, {:limit => 1}).to_a.callback do |obj2|
+            obj2.size.should == 1
+          end
+          collection.afirst.callback do |obj3|
+            obj3.is_a?(Hash).should be_true
+            obj3['hello'].should == 'world'
+            EM.next_tick{ EventMachine.stop }
+          end
+        end
+      end
+
+      it "should be able to order results" do
+        EventMachine.synchrony do
+          collection = EM::Mongo::Connection.new.db('db').collection('test')
+          collection.remove({}) # nuke all keys in collection
+
+          collection.insert(:name => 'one', :position => 0)
+          collection.insert(:name => 'three', :position => 2)
+          collection.insert(:name => 'two', :position => 1)
+
+          collection.afind({}, {:order => 'position'}).to_a.callback do |res|
+            res[0]["name"].should == 'one'
+            res[1]["name"].should == 'two'
+            res[2]["name"].should == 'three'
+          end
+
+          collection.afind({}, {:order => [:position, :desc]}).to_a.callback do |res1|
+            res1[0]["name"].should == 'three'
+            res1[1]["name"].should == 'two'
+            res1[2]["name"].should == 'one'
+            EM.next_tick{ EventMachine.stop }
+          end
+
+        end
+      end
+    end
+
+  else
+    puts "(specs) Old Mongo!"
+
+    describe '*A*synchronously (afind & afirst) [Mongo <= 0.3.6, using blocks]' do
+      it "should insert a record into db" do
+        EventMachine.synchrony do
+          collection = EM::Mongo::Connection.new.db('db').collection('test')
+          collection.remove({}) # nuke all keys in collection
+
+          obj = collection.insert('hello' => 'world')
+          obj.should be_a(BSON::ObjectId)
+
+          ret_val = collection.afind do |obj|
+            obj.size.should == 1
+            obj.first['hello'].should == 'world'
+            EM.next_tick{ EventMachine.stop }
+          end
+          ret_val.should be_a(Integer)
+        end
+      end
+
+      it "should insert a record into db and be able to find it" do
+        EventMachine.synchrony do
+          collection = EM::Mongo::Connection.new.db('db').collection('test')
+          collection.remove({}) # nuke all keys in collection
+
+          obj = collection.insert('hello' => 'world')
+          obj = collection.insert('hello2' => 'world2')
+
+          collection.afind({}) do |obj|
+            obj.size.should == 2
+          end
+          collection.afind({}, {:limit => 1}) do |obj2|
+            obj2.size.should == 1
+          end
+          collection.afirst do |obj3|
+            obj3.is_a?(Hash).should be_true
+            obj3['hello'].should == 'world'
+            EM.next_tick{ EventMachine.stop }
+          end
+        end
+      end
+
+      it "should be able to order results" do
+        EventMachine.synchrony do
+          collection = EM::Mongo::Connection.new.db('db').collection('test')
+          collection.remove({}) # nuke all keys in collection
+
+          collection.insert(:name => 'one', :position => 0)
+          collection.insert(:name => 'three', :position => 2)
+          collection.insert(:name => 'two', :position => 1)
+
+          collection.afind({}, {:order => 'position'}) do |res|
+            res[0]["name"].should == 'one'
+            res[1]["name"].should == 'two'
+            res[2]["name"].should == 'three'
+          end
+
+          collection.afind({}, {:order => [:position, :desc]}) do |res1|
+            res1[0]["name"].should == 'three'
+            res1[1]["name"].should == 'two'
+            res1[2]["name"].should == 'one'
+            EM.next_tick{ EventMachine.stop }
+          end
+
+        end
+      end
+    end
+
   end
 
   it "should update records in db" do
