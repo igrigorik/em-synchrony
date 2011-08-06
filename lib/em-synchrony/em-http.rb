@@ -12,11 +12,15 @@ module EventMachine
          def #{type}(options = {}, &blk)
            f = Fiber.current
 
-            conn = setup_request(:#{type}, options, &blk)
-            conn.callback { f.resume(conn) }
-            conn.errback  { f.resume(conn) }
-
-            Fiber.yield
+           conn = setup_request(:#{type}, options, &blk)
+           if conn.error.nil?
+             conn.callback { f.resume(conn) }
+             conn.errback  { f.resume(conn) }
+             
+             Fiber.yield
+           else
+             conn
+           end
          end
       ]
     end
