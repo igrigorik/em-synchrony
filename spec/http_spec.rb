@@ -1,6 +1,7 @@
 require "spec/helper/all"
 
 URL = "http://localhost:8081/"
+CONNECTION_ERROR_URL = "http://random-domain-blah.com/"
 DELAY = 0.25
 
 describe EventMachine::HttpRequest do
@@ -55,6 +56,15 @@ describe EventMachine::HttpRequest do
       res.responses[:errback].size.should == 0
 
       s.stop
+      EventMachine.stop
+    end
+  end
+  
+  it "should terminate immediately in case of connection errors" do
+    EventMachine.synchrony do
+      response = EventMachine::HttpRequest.new(CONNECTION_ERROR_URL).get
+      response.error.should_not be_nil
+      
       EventMachine.stop
     end
   end
