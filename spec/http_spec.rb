@@ -68,4 +68,17 @@ describe EventMachine::HttpRequest do
       EventMachine.stop
     end
   end
+  
+  it "should process inactivity timeout correctly" do
+    EventMachine.synchrony do
+      s = StubServer.new("HTTP/1.0 200 OK\r\nConnection: close\r\n\r\nFoo", 5)
+      
+      start = now
+      r = EventMachine::HttpRequest.new(URL, :inactivity_timeout => 0.5).get
+      (now - start.to_f).should be_within(0.2).of(0.5)
+      
+      s.stop
+      EventMachine.stop
+    end
+  end
 end
