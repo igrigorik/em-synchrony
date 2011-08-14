@@ -45,6 +45,27 @@ EM.synchrony do
 end
 ```
 
+Or, you can use FiberIterator to hide the async nature of em-http:
+
+```ruby
+require "em-synchrony"
+require "em-synchrony/em-http"
+
+EM.synchrony do
+    concurrency = 2
+    urls = ['http://url.1.com', 'http://url2.com']
+    results = []
+
+    EM::Synchrony::FiberIterator.new(urls, concurrency).each do |url|
+        resp = EventMachine::HttpRequest.new(url).get
+    results.push resp.response
+    end
+
+    p results # all completed requests
+    EventMachine.stop
+end
+```
+
 ## Fiber-aware ConnectionPool shared by a fiber:
 Allows you to create a pool of resources which are then shared by one or more fibers. A good example is a collection of long-lived database connections. The pool will automatically block and wake up the fibers as the connections become available.
 
