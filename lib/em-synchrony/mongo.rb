@@ -11,4 +11,22 @@ silence_warnings do
     Mutex = ::EventMachine::Synchrony::Thread::Mutex
     ConditionVariable = ::EventMachine::Synchrony::Thread::ConditionVariable
   end
+
+  class Mongo::Pool
+    TCPSocket = ::EventMachine::Synchrony::TCPSocket
+    Mutex = ::EventMachine::Synchrony::Thread::Mutex
+    ConditionVariable = ::EventMachine::Synchrony::Thread::ConditionVariable
+  end
+
+  class EventMachine::Synchrony::MongoTimeoutHandler
+    def self.timeout(op_timeout, ex_class, &block)
+      f = Fiber.current
+      timer = EM::Timer.new(op_timeout) { f.resume(nil) }
+      res = block.call
+      timer.cancel
+      res
+    end
+  end
+
+  Mongo::TimeoutHandler = EventMachine::Synchrony::MongoTimeoutHandler
 end
