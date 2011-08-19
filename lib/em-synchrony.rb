@@ -12,6 +12,7 @@ require "em-synchrony/thread"
 require "em-synchrony/em-multi"
 require "em-synchrony/tcpsocket"
 require "em-synchrony/connection_pool"
+require "em-synchrony/keyboard"
 require "em-synchrony/iterator"  if EventMachine::VERSION > '0.12.10'
 
 module EventMachine
@@ -74,6 +75,11 @@ module EventMachine
       EM.add_periodic_timer(interval) do
         Fiber.new { blk.call }.resume
       end
+    end
+    
+    # routes to EM::Synchrony::Keyboard
+    def self.gets
+      EventMachine::Synchrony::Keyboard.new.gets
     end
   end
 end
