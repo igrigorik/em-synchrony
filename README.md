@@ -14,11 +14,15 @@ Supported clients:
 
  * em-http-request: .get, etc are synchronous, while .aget, etc are async
  * em-memcached & remcached: .get, etc, and .multi_* methods are synchronous
- * em-redis: synchronous connect, .a{cmd} are async
- * em-mysqlplus: .query is synchronous, while .aquery is async
  * em-mongo: .find, .first are synchronous
  * mongoid: all functions synchronous, plus Rails compatability
- * bitly v2 and v3: synchronous api calls with EM::HttpRequest.
+ * em-redis: synchronous connect, .a{cmd} are async (see below, you should probably use the official redis.rb gem instead)
+ * mysql2: .query is synchronyous, while .aquery is async (see specs)
+
+Other clients with native Fiber support:
+
+ * redis: contains [synchrony code](https://github.com/ezmobius/redis-rb/blob/master/test/synchrony_driver.rb) right within the driver
+ ** synchrony also supports em-redis and em-hiredis (see specs), but unless you specifically need either of those, use the official redis gem
 
 ## Fiber-aware Iterator: mixing sync / async code
 
@@ -148,7 +152,6 @@ end
 EM-Synchrony ships with a number of patched Eventmachine clients, which allow you to patch your asynchronous drivers on the fly to behave as if they were actually blocking clients:
 
  * [em-http-request](http://github.com/igrigorik/em-synchrony/blob/master/spec/http_spec.rb)
- * [em-mysqlplus](http://github.com/igrigorik/em-synchrony/blob/master/spec/mysqlplus_spec.rb)
  * [em-redis](http://github.com/igrigorik/em-synchrony/blob/master/spec/redis_spec.rb)
  * [em-memcached](http://github.com/igrigorik/em-synchrony/blob/master/spec/memcache_spec.rb) & [remcached](http://github.com/igrigorik/em-synchrony/blob/master/spec/remcached_spec.rb)
  * [em-mongo](http://github.com/igrigorik/em-synchrony/blob/master/spec/em-mongo_spec.rb) & [mongoid](http://github.com/igrigorik/em-synchrony/blob/master/spec/mongo_spec.rb)
