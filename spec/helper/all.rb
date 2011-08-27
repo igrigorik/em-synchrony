@@ -4,7 +4,7 @@ require 'pp'
 
 require 'lib/em-synchrony'
 require 'lib/em-synchrony/em-http'
-require 'lib/em-synchrony/em-mysqlplus'
+require 'lib/em-synchrony/mysql2'
 require 'lib/em-synchrony/em-remcached'
 require 'lib/em-synchrony/em-memcache'
 require 'lib/em-synchrony/em-mongo'
