@@ -1,28 +1,29 @@
 # EM-Synchrony
 
-Collection of convenience classes and primitives to help untangle evented code, plus a number of patched EM clients to make them Fiber aware. To learn more, please see: [Untangling Evented Code with Ruby Fibers](http://www.igvita.com/2010/03/22/untangling-evented-code-with-ruby-fibers). Word of warning: even though Fibers have been backported to Ruby 1.8.x, these classes assume Ruby 1.9.x (if you're using fibers in production, you should be on 1.9.x anyway).
+Collection of convenience classes and primitives to help untangle evented code, plus a number of patched EM clients to make them Fiber aware. To learn more, please see: [Untangling Evented Code with Ruby Fibers](http://www.igvita.com/2010/03/22/untangling-evented-code-with-ruby-fibers).
 
- * Fiber aware connection pool with sync/async query support
- * Fiber aware iterator to allow concurrency control & mixing of sync / async
+ * Fiber aware ConnectionPool with sync/async query support
+ * Fiber aware Iterator to allow concurrency control & mixing of sync / async
  * Fiber aware async inline support: turns any async function into sync
- * Fiber aware multi-request interface for any callback enabled clients
+ * Fiber aware Multi-request interface for any callback enabled clients
  * Fiber aware TCPSocket replacement, powered by EventMachine
  * Fiber aware Thread, Mutex, ConditionVariable clases
  * Fiber aware sleep
 
 Supported clients:
 
- * em-http-request: .get, etc are synchronous, while .aget, etc are async
- * em-memcached & remcached: .get, etc, and .multi_* methods are synchronous
- * em-mongo: .find, .first are synchronous
- * mongoid: all functions synchronous, plus Rails compatability
- * em-redis: synchronous connect, .a{cmd} are async (see below, you should probably use the official redis.rb gem instead)
- * mysql2: .query is synchronyous, while .aquery is async (see specs)
+ * [mysql2](http://github.com/igrigorik/em-synchrony/blob/master/spec/mysql2_spec.rb): .query is synchronous, while .aquery is async (see specs)
+ * [activerecord](http://github.com/igrigorik/em-synchrony/blob/master/spec/activerecord_spec.rb): require synchrony/activerecord, set your AR adapter to em_mysql2 and you should be good to go
+ * [em-http-request](http://github.com/igrigorik/em-synchrony/blob/master/spec/http_spec.rb): .get, etc are synchronous, while .aget, etc are async
+ * [em-memcached](http://github.com/igrigorik/em-synchrony/blob/master/spec/memcache_spec.rb) & [remcached](http://github.com/igrigorik/em-synchrony/blob/master/spec/remcached_spec.rb): .get, etc, and .multi_* methods are synchronous
+ * [em-mongo](http://github.com/igrigorik/em-synchrony/blob/master/spec/em-mongo_spec.rb): .find, .first are synchronous
+ * [mongoid](http://github.com/igrigorik/em-synchrony/blob/master/spec/mongo_spec.rb): all functions synchronous, plus Rails compatibility
+ * em-jack: a[method]'s are async, and all regular jack method's are synchronous
 
 Other clients with native Fiber support:
 
  * redis: contains [synchrony code](https://github.com/ezmobius/redis-rb/blob/master/test/synchrony_driver.rb) right within the driver
- * synchrony also supports em-redis and em-hiredis (see specs), but unless you specifically need either of those, use the official redis gem
+ * synchrony also supports [em-redis](http://github.com/igrigorik/em-synchrony/blob/master/spec/redis_spec.rb) and em-hiredis (see specs), but unless you specifically need either of those, use the official redis gem
 
 ## Fiber-aware Iterator: mixing sync / async code
 
@@ -31,6 +32,7 @@ Allows you to perform each, map, inject on a collection of any asynchronous task
 ```ruby
 require "em-synchrony"
 require "em-synchrony/em-http"
+
 EM.synchrony do
     concurrency = 2
     urls = ['http://url.1.com', 'http://url2.com']
@@ -76,6 +78,7 @@ Allows you to create a pool of resources which are then shared by one or more fi
 ```ruby
 require "em-synchrony"
 require "em-synchrony/mysql2"
+
 EventMachine.synchrony do
     db = EventMachine::Synchrony::ConnectionPool.new(size: 2) do
         Mysql2::EM::Client.new
@@ -147,14 +150,21 @@ EM.synchrony do
 end
 ```
 
-## Patched clients
+## Async ActiveRecord:
 
-EM-Synchrony ships with a number of patched Eventmachine clients, which allow you to patch your asynchronous drivers on the fly to behave as if they were actually blocking clients:
+Allows you to use async ActiveRecord within Rails and outside of Rails (see [async-rails](https://github.com/igrigorik/async-rails)). If you need to control the connection pool size, use [rack/fiber_pool](https://github.com/mperham/rack-fiber_pool/).
 
- * [em-http-request](http://github.com/igrigorik/em-synchrony/blob/master/spec/http_spec.rb)
- * [em-redis](http://github.com/igrigorik/em-synchrony/blob/master/spec/redis_spec.rb)
- * [em-memcached](http://github.com/igrigorik/em-synchrony/blob/master/spec/memcache_spec.rb) & [remcached](http://github.com/igrigorik/em-synchrony/blob/master/spec/remcached_spec.rb)
- * [em-mongo](http://github.com/igrigorik/em-synchrony/blob/master/spec/em-mongo_spec.rb) & [mongoid](http://github.com/igrigorik/em-synchrony/blob/master/spec/mongo_spec.rb)
+```ruby
+require "em-synchrony"
+require "em-synchrony/activerecord"
+
+ActiveRecord::Base.establish_connection(
+  :adapter => 'em_mysql2',
+  :database => 'widgets'
+)
+
+result = Widget.all.to_a
+```
 
 # License
 
