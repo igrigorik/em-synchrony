@@ -22,7 +22,7 @@ Supported clients:
 Other clients with native Fiber support:
 
  * redis: contains [synchrony code](https://github.com/ezmobius/redis-rb/blob/master/test/synchrony_driver.rb) right within the driver
- ** synchrony also supports em-redis and em-hiredis (see specs), but unless you specifically need either of those, use the official redis gem
+ * synchrony also supports em-redis and em-hiredis (see specs), but unless you specifically need either of those, use the official redis gem
 
 ## Fiber-aware Iterator: mixing sync / async code
 
@@ -75,10 +75,10 @@ Allows you to create a pool of resources which are then shared by one or more fi
 
 ```ruby
 require "em-synchrony"
-require "em-synchrony/em-mysqlplus"
+require "em-synchrony/mysql2"
 EventMachine.synchrony do
     db = EventMachine::Synchrony::ConnectionPool.new(size: 2) do
-        EventMachine::MySQL.new(host: "localhost")
+        Mysql2::EM::Client.new
     end
 
     multi = EventMachine::Synchrony::Multi.new
