@@ -56,6 +56,7 @@ Or, you can use FiberIterator to hide the async nature of em-http:
 ```ruby
 require "em-synchrony"
 require "em-synchrony/em-http"
+require "em-synchrony/fiber_iterator"
 
 EM.synchrony do
     concurrency = 2
