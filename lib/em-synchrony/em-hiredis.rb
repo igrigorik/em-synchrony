@@ -6,12 +6,11 @@ end
 
 module EventMachine
   module Hiredis
-    class Connection
-      attr_reader :connected
+    class Client
 
       def self.connect(host = 'localhost', port = 6379)
         conn = new(host, port)
-        EM::Synchrony.sync conn
+        EM::Synchrony.sync conn.connect
         conn
       end
 
