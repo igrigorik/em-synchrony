@@ -144,7 +144,7 @@ EM.synchrony do
   result = EM::Synchrony.sync EventMachine::HttpRequest.new('http://www.gooogle.com/').aget
   p result
 
-  # pause exection for 2 seconds
+  # pause execution for 2 seconds
   EM::Synchrony.sleep(2)
 
   EM.stop
