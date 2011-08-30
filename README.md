@@ -56,6 +56,7 @@ Or, you can use FiberIterator to hide the async nature of em-http:
 ```ruby
 require "em-synchrony"
 require "em-synchrony/em-http"
+require "em-synchrony/fiber_iterator"
 
 EM.synchrony do
     concurrency = 2
@@ -143,7 +144,7 @@ EM.synchrony do
   result = EM::Synchrony.sync EventMachine::HttpRequest.new('http://www.gooogle.com/').aget
   p result
 
-  # pause exection for 2 seconds
+  # pause execution for 2 seconds
   EM::Synchrony.sleep(2)
 
   EM.stop
