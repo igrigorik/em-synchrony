@@ -86,7 +86,13 @@ module ActiveRecord
 
         @columns_hash = Hash.new do |h, table_name|
           h[table_name] = Hash[columns[table_name].map { |col|
-            [col.name, col]
+                                 [col.name, col]
+          }]
+        end
+
+        @column_defaults = Hash.new do |h, table_name|
+          h[table_name] = Hash[columns[table_name].map { |col|
+                                 [col.name, col.default]
           }]
         end
 
@@ -116,16 +122,16 @@ module ActiveRecord
 
       private
 
-      def current_connection_id #:nodoc:
-        Fiber.current.object_id
-      end
+        def current_connection_id #:nodoc:
+          Fiber.current.object_id
+        end
 
-      def checkout_and_verify(c)
-        @checked_out << c
-        c.run_callbacks :checkout
-        c.verify!
-        c
-      end
+        def checkout_and_verify(c)
+          @checked_out << c
+          c.run_callbacks :checkout
+          c.verify!
+          c
+        end
     end
 
   end
