@@ -1,5 +1,3 @@
-# Necessary monkeypatching to make AR fiber-friendly.
-
 module ActiveRecord
   module ConnectionAdapters
 
