@@ -29,7 +29,7 @@ module EventMachine
 
   module Synchrony
 
-    # sync is a close relative to inclineCallbacks from Twisted (Python)
+    # sync is a close relative to inlineCallbacks from Twisted (Python)
     #
     # Synchrony.sync allows you to write sequential code while using asynchronous
     # or callback-based methods under the hood. Example:
@@ -58,26 +58,40 @@ module EventMachine
       Fiber.yield
     end
 
-    # a Fiber-aware sleep function using an EM timer
+    # Fiber-aware sleep function using an EM timer
+    # 
+    # Execution is stopped for specified amount of seconds
+    # and then automatically resumed (just like regular sleep)
+    # except without locking the reactor thread
+    #
     def self.sleep(secs)
       fiber = Fiber.current
       EM::Timer.new(secs) { fiber.resume }
       Fiber.yield
     end
 
+    # Fiber-aware EventMachine timer: wraps the passed in 
+    # block within a new fiber context such that you can 
+    # continue using synchrony methods
+    #
     def self.add_timer(interval, &blk)
       EM.add_timer(interval) do
         Fiber.new { blk.call }.resume
       end
     end
 
+    # Fiber-aware EventMachine timer: wraps the passed in
+    # block within a new fiber (new fiber on every invocation)
+    # to allow you to continue using synchrony methods
+    #
     def self.add_periodic_timer(interval, &blk)
       EM.add_periodic_timer(interval) do
         Fiber.new { blk.call }.resume
       end
     end
     
-    # routes to EM::Synchrony::Keyboard
+    # Routes to EM::Synchrony::Keyboard
+    #
     def self.gets
       EventMachine::Synchrony::Keyboard.new.gets
     end
