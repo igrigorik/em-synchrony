@@ -230,4 +230,21 @@ describe EM::Mongo do
       EventMachine.stop
     end
   end
+
+  it "authenticates" do
+    # For this to actually assert anything we will need to add the test user to
+    # the database
+    #
+    # From the Mongo shell:
+    # > use db
+    # > db.addUser('test', 'test')
+    EventMachine.synchrony do
+      database = EM::Mongo::Connection.new.db('db')
+      database.add_user('test', 'test')
+      auth = database.authenticate('test', 'test').callback do |cb|
+        cb.should == true
+      end
+      EventMachine.stop
+    end
+  end
 end
