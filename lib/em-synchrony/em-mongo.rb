@@ -7,6 +7,25 @@ end
 module EM
   module Mongo
 
+    class Database
+      def authenticate(username, password)
+        auth_result = self.collection(SYSTEM_COMMAND_COLLECTION).first({'getnonce' => 1})
+
+        auth                 = BSON::OrderedHash.new
+        auth['authenticate'] = 1
+        auth['user']         = username
+        auth['nonce']        = auth_result['nonce']
+        auth['key']          = EM::Mongo::Support.auth_key(username, password, auth_result['nonce'])
+
+        auth_result2 = self.collection(SYSTEM_COMMAND_COLLECTION).first(auth)
+        if EM::Mongo::Support.ok?(auth_result2)
+          true
+        else
+          raise AuthenticationError, auth_result2["errmsg"]
+        end
+      end
+    end
+
     class Connection
       def initialize(host = DEFAULT_IP, port = DEFAULT_PORT, timeout = nil, opts = {})
         f = Fiber.current

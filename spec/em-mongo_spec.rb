@@ -230,4 +230,30 @@ describe EM::Mongo do
       EventMachine.stop
     end
   end
+
+  context "authentication" do
+    # these specs only get asserted if you run mongod with the --auth flag
+    it "successfully authenticates" do
+      # For this spec you will need to add this user to the database
+      #
+      # From the Mongo shell:
+      # > use db
+      # > db.addUser('test', 'test')
+      EventMachine.synchrony do
+        database = EM::Mongo::Connection.new.db('db')
+        database.authenticate('test', 'test').should == true
+        EventMachine.stop
+      end
+    end
+
+    it "raises an AuthenticationError if it cannot authenticate" do
+      EventMachine.synchrony do
+        database = EM::Mongo::Connection.new.db('db')
+        proc {
+          database.authenticate('test', 'wrong_password')
+        }.should raise_error(EventMachine::Mongo::AuthenticationError, "auth fails")
+        EventMachine.stop
+      end
+    end
+  end
 end
