@@ -9,7 +9,6 @@ module EM
 
     class Database
       def authenticate(username, password)
-        response = RequestResponse.new
         auth_result = self.collection(SYSTEM_COMMAND_COLLECTION).first({'getnonce' => 1})
 
         auth                 = BSON::OrderedHash.new
@@ -20,11 +19,10 @@ module EM
 
         auth_result2 = self.collection(SYSTEM_COMMAND_COLLECTION).first(auth)
         if EM::Mongo::Support.ok?(auth_result2)
-          response.succeed true
+          true
         else
-          response.fail auth_result2
+          raise AuthenticationError, auth_result2["errmsg"]
         end
-        response
       end
     end
 
