@@ -59,7 +59,7 @@ module EventMachine
     end
 
     # Fiber-aware sleep function using an EM timer
-    # 
+    #
     # Execution is stopped for specified amount of seconds
     # and then automatically resumed (just like regular sleep)
     # except without locking the reactor thread
@@ -70,8 +70,8 @@ module EventMachine
       Fiber.yield
     end
 
-    # Fiber-aware EventMachine timer: wraps the passed in 
-    # block within a new fiber context such that you can 
+    # Fiber-aware EventMachine timer: wraps the passed in
+    # block within a new fiber context such that you can
     # continue using synchrony methods
     #
     def self.add_timer(interval, &blk)
@@ -89,7 +89,13 @@ module EventMachine
         Fiber.new { blk.call }.resume
       end
     end
-    
+
+    # Fiber-aware EM.next_tick convenience function
+    #
+    def self.next_tick(&blk)
+      EM.next_tick { Fiber.new { blk.call }.resume }
+    end
+
     # Routes to EM::Synchrony::Keyboard
     #
     def self.gets
