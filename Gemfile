@@ -8,7 +8,7 @@ group :development do
   gem 'remcached'
   # gem 'em-mongo', :git => 'https://github.com/bcg/em-mongo.git'
   gem 'activerecord', '>= 3.1.0.rc6'
-  gem 'em-mongo', '~> 0.3.6'
+  gem 'em-mongo'
   gem 'bson_ext'
   gem 'mysql2'
   gem 'em-redis', '~> 0.3.0'
