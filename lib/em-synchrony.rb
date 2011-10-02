@@ -8,6 +8,7 @@ rescue LoadError => error
   raise error unless defined? Fiber
 end
 
+require "em-synchrony/core_ext"
 require "em-synchrony/thread"
 require "em-synchrony/em-multi"
 require "em-synchrony/tcpsocket"
