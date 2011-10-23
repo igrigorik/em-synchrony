@@ -157,6 +157,7 @@ Allows you to use async ActiveRecord within Rails and outside of Rails (see [asy
 
 ```ruby
 require "em-synchrony"
+require "em-synchrony/mysql2"
 require "em-synchrony/activerecord"
 
 ActiveRecord::Base.establish_connection(
