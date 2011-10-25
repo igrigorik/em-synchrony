@@ -107,4 +107,17 @@ describe Mysql2::EM::Client do
     end
   end
 
+  it "errback should not catch exception thrown from callback" do
+    class ErrbackShouldNotCatchThis < Exception; end
+    proc {
+      EM.synchrony do
+        db = Mysql2::EM::Client.new
+        res = db.query QUERY
+        raise ErrbackShouldNotCatchThis.new("errback should not catch this")
+
+        EventMachine.stop
+      end
+    }.should raise_error(ErrbackShouldNotCatchThis)
+  end
+
 end
