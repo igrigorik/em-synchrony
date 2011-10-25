@@ -7,6 +7,18 @@ end
 module Mysql2
   module EM
     class Client
+      module Watcher
+        def notify_readable
+          detach
+          begin
+            result = @client.async_result
+          rescue Exception => e
+            @deferable.fail(e)
+          else
+            @deferable.succeed(result)
+          end
+        end
+      end
 
       alias :aquery :query
       def query(sql, opts={})
