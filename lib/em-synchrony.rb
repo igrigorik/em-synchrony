@@ -46,11 +46,11 @@ module EventMachine
     #
     def self.sync(df)
       f = Fiber.current
-      xback = proc {|r|
+      xback = lambda {|*args|
         if f == Fiber.current
-          return r
+          return *args
         else
-          f.resume r
+          f.resume(*args)
         end
       }
       df.callback &xback
@@ -58,6 +58,7 @@ module EventMachine
 
       Fiber.yield
     end
+
 
     # Fiber-aware sleep function using an EM timer
     #
