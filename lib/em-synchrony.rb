@@ -46,13 +46,14 @@ module EventMachine
     #
     def self.sync(df)
       f = Fiber.current
-      xback = lambda {|*args|
+      xback = lambda do |*args|
         if f == Fiber.current
           return *args
         else
           f.resume(*args)
         end
-      }
+      end
+
       df.callback &xback
       df.errback &xback
 
