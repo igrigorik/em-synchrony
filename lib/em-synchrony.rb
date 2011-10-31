@@ -46,7 +46,7 @@ module EventMachine
     #
     def self.sync(df)
       f = Fiber.current
-      xback = lambda do |*args|
+      xback = proc do |*args|
         if f == Fiber.current
           return *args
         else
