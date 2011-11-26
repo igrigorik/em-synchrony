@@ -26,4 +26,5 @@ describe EM::Synchrony do
       }.resume
     end
   end
+
 end
