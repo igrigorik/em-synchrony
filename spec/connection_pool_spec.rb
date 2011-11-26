@@ -126,4 +126,32 @@ describe EventMachine::Synchrony::ConnectionPool do
     end
   end
 
+  it "should never timeout when acquire twice from the pool in the same fiber " do
+    class Client
+      def request
+        yield if block_given?
+      end
+    end
+
+    EM.run do
+      pool = EM::Synchrony::ConnectionPool.new :size => 2 do
+        Client.new
+      end
+
+      EM.synchrony do
+        pool.request do
+          pool.request
+        end
+
+        Timeout::timeout(2) {
+          pool.request do
+            pool.request
+          end
+        }
+
+        EM.stop
+      end
+    end
+  end
+
 end
