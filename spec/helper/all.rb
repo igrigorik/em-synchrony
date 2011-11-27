@@ -10,6 +10,7 @@ require 'lib/em-synchrony/em-memcache'
 require 'lib/em-synchrony/em-mongo'
 require 'lib/em-synchrony/em-redis'
 require 'lib/em-synchrony/em-hiredis'
+require 'lib/em-synchrony/amqp'
 
 require 'helper/tolerance_matcher'
 require 'helper/stub-http-server'
