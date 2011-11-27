@@ -1,5 +1,6 @@
 begin
   require "amqp"
+  require "amq/protocol"
 rescue LoadError => error
   raise "Missing EM-Synchrony dependency: gem install amqp"
 end
@@ -7,6 +8,7 @@ end
 module EventMachine
   module Synchrony
     module AMQP
+      class Error < RuntimeError; end
 
       class << self
         def sync &blk
@@ -38,10 +40,35 @@ module EventMachine
         def initialize(*params, &block)
           f = Fiber.current
           super(*params, &EM::Synchrony::AMQP.sync_cb(f))
-          Fiber.yield
+          channel, open_ok = Fiber.yield
+          raise Error.new unless open_ok.is_a?(::AMQ::Protocol::Channel::OpenOk)
+          channel
         end
 
-        %w[direct fanout topic headers queue queue! flow prefetch recover tx_select tx_commit tx_rollback reset]
+        %w[direct fanout topic headers].each do |type|
+          line = __LINE__ + 2
+          code = <<-EOF
+            alias :a#{type} :#{type}
+            def #{type}(name = 'amq.#{type}', opts = {})
+              if exchange = find_exchange(name)
+                extended_opts = Exchange.add_default_options(:#{type}, name, opts, nil)
+                validate_parameters_match!(exchange, extended_opts)
+                exchange
+              else
+                register_exchange(Exchange.new(self, :#{type}, name, opts))
+              end
+            end
+          EOF
+          module_eval(code, __FILE__, line)
+        end
+
+        alias :aqueue! :queue!
+        def queue!(name, opts = {})
+          queue = Queue.new(self, name, opts)
+          register_queue(queue)
+        end
+
+        %w[queue flow prefetch recover tx_select tx_commit tx_rollback reset]
         .each do |type|
           module_eval %[
             alias :a#{type} :#{type}
@@ -56,7 +83,9 @@ module EventMachine
         def initialize(channel, type, name, opts = {}, &block)
           f = Fiber.current
           super(channel, type, name, opts, &EM::Synchrony::AMQP.sync_cb(f))
-          Fiber.yield
+          exchange, declare_ok = Fiber.yield
+          raise Error.new unless declare_ok.is_a?(::AMQ::Protocol::Exchange::DeclareOk)
+          exchange
         end
 
         %w[publish delete]
@@ -74,7 +103,9 @@ module EventMachine
         def initialize(*params)
           f = Fiber.current
           super(*params, &EM::Synchrony::AMQP.sync_cb(f))
-          Fiber.yield
+          queue, declare_ok = Fiber.yield
+          raise Error.new unless declare_ok.is_a?(::AMQ::Protocol::Queue::DeclareOk)
+          queue
         end
 
         alias :asubscribe :subscribe

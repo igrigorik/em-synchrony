@@ -24,7 +24,7 @@ describe EM::Synchrony::AMQP do
   it "should yield until the channel is created" do
     EM.synchrony do
       connection = EM::Synchrony::AMQP.connect
-      channel, open_ok = EM::Synchrony::AMQP::Channel.new(connection)
+      channel = EM::Synchrony::AMQP::Channel.new(connection)
       channel.should be_kind_of(EM::Synchrony::AMQP::Channel)
       EM.stop
     end
@@ -33,8 +33,8 @@ describe EM::Synchrony::AMQP do
   it "should yield until the queue is created" do
     EM.synchrony do
       connection = EM::Synchrony::AMQP.connect
-      channel, open_ok = EM::Synchrony::AMQP::Channel.new(connection)
-      queue, declare_ok = EM::Synchrony::AMQP::Queue.new(channel, "test.em-synchrony.queue1", :auto_delete => true)
+      channel = EM::Synchrony::AMQP::Channel.new(connection)
+      queue = EM::Synchrony::AMQP::Queue.new(channel, "test.em-synchrony.queue1", :auto_delete => true)
       EM.stop
     end
   end
@@ -42,8 +42,20 @@ describe EM::Synchrony::AMQP do
   it "should yield until the exchange is created" do
     EM.synchrony do
       connection = EM::Synchrony::AMQP.connect
-      channel, open_ok = EM::Synchrony::AMQP::Channel.new(connection)
-      exchange, declare_ok = EM::Synchrony::AMQP::Exchange.new(channel, :fanout, "test.em-synchrony.fanout")
+      channel = EM::Synchrony::AMQP::Channel.new(connection)
+
+      exchange = EM::Synchrony::AMQP::Exchange.new(channel, :fanout, "test.em-synchrony.exchange")
+      exchange.should be_kind_of(EventMachine::Synchrony::AMQP::Exchange)
+
+      direct = channel.fanout("test.em-synchrony.direct")
+      fanout = channel.fanout("test.em-synchrony.fanout")
+      topic = channel.fanout("test.em-synchrony.topic")
+      headers = channel.fanout("test.em-synchrony.headers")
+
+      direct.should be_kind_of(EventMachine::Synchrony::AMQP::Exchange)
+      fanout.should be_kind_of(EventMachine::Synchrony::AMQP::Exchange)
+      topic.should be_kind_of(EventMachine::Synchrony::AMQP::Exchange)
+      headers.should be_kind_of(EventMachine::Synchrony::AMQP::Exchange)
       EM.stop
     end
   end
@@ -52,11 +64,11 @@ describe EM::Synchrony::AMQP do
     publish_number = 10
     EM.synchrony do
       connection = EM::Synchrony::AMQP.connect
-      channel, open_ok = EM::Synchrony::AMQP::Channel.new(connection)
-      ex, declare_ok = EM::Synchrony::AMQP::Exchange.new(channel, :fanout, "test.em-synchrony.fanout")
+      channel = EM::Synchrony::AMQP::Channel.new(connection)
+      ex = EM::Synchrony::AMQP::Exchange.new(channel, :fanout, "test.em-synchrony.fanout")
 
-      q1, declare_ok = EM::Synchrony::AMQP::Queue.new(channel, "test.em-synchrony.queues.1", :auto_delete => true)
-      q2, declare_ok = EM::Synchrony::AMQP::Queue.new(channel, "test.em-synchrony.queues.2", :auto_delete => true)
+      q1 = EM::Synchrony::AMQP::Queue.new(channel, "test.em-synchrony.queues.1", :auto_delete => true)
+      q2 = EM::Synchrony::AMQP::Queue.new(channel, "test.em-synchrony.queues.2", :auto_delete => true)
 
       q1.bind(ex)
       q2.bind(ex)
