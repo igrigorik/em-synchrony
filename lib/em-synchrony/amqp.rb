@@ -28,11 +28,13 @@ module EventMachine
         end
 
         %w[connect start run].each do |type|
-          module_eval %[
+          line = __LINE__ + 2
+          code = <<-EOF
             def #{type}(*params)
               sync { |f| ::AMQP.#{type}(*params, &sync_cb(f)) }
             end
-          ]
+          EOF
+          module_eval(code, __FILE__, line)
         end
       end
 
@@ -70,12 +72,14 @@ module EventMachine
 
         %w[queue flow prefetch recover tx_select tx_commit tx_rollback reset]
         .each do |type|
-          module_eval %[
+          line = __LINE__ + 2
+          code = <<-EOF
             alias :a#{type} :#{type}
             def #{type}(*params)
               EM::Synchrony::AMQP.sync { |f| self.a#{type}(*params, &EM::Synchrony::AMQP.sync_cb(f)) }
             end
-          ]
+          EOF
+          module_eval(code, __FILE__, line)
         end
       end
 
@@ -88,14 +92,15 @@ module EventMachine
           exchange
         end
 
-        %w[publish delete]
-        .each do |type|
-          module_eval %[
+        %w[publish delete].each do |type|
+          line = __LINE__ + 2
+          code = <<-EOF
             alias :a#{type} :#{type}
             def #{type}(*params)
               EM::Synchrony::AMQP.sync { |f| self.a#{type}(*params, &EM::Synchrony::AMQP.sync_cb(f)) }
             end
-          ]
+          EOF
+          module_eval(code, __FILE__, line)
         end
       end
 
@@ -116,25 +121,28 @@ module EventMachine
           end.resume
         end
 
-        %w[bind rebind unbind delete purge pop unsubscribe status]
-        .each do |type|
-          module_eval %[
+        %w[bind rebind unbind delete purge pop unsubscribe status].each do |type|
+          line = __LINE__ + 2
+          code = <<-EOF
             alias :a#{type} :#{type}
             def #{type}(*params)
               EM::Synchrony::AMQP.sync { |f| self.a#{type}(*params, &EM::Synchrony::AMQP.sync_cb(f)) }
             end
-          ]
+          EOF
+          module_eval(code, __FILE__, line)
         end
       end
 
       class Session < ::AMQP::Session
         %w[disconnect].each do |type|
-          module_eval %[
+          line = __LINE__ + 2
+          code = <<-EOF
             alias :a#{type} :#{type}
             def #{type}(*params)
               EM::Synchrony::AMQP.sync { |f| self.a#{type}(*params, &EM::Synchrony::AMQP.sync_cb(f)) }
             end
-          ]
+          EOF
+          module_eval(code, __FILE__, line)
         end
       end
 
