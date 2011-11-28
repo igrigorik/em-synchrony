@@ -70,7 +70,7 @@ module EventMachine
           register_queue(queue)
         end
 
-        %w[queue flow prefetch recover tx_select tx_commit tx_rollback reset]
+        %w[flow prefetch recover tx_select tx_commit tx_rollback reset]
         .each do |type|
           line = __LINE__ + 2
           code = <<-EOF

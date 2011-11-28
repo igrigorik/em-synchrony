@@ -37,6 +37,15 @@ describe EM::Synchrony::AMQP do
     end
   end
 
+  it "should yield when a queue is created from a channel" do
+    EM.synchrony do
+      connection = EM::Synchrony::AMQP.connect
+      channel = EM::Synchrony::AMQP::Channel.new(connection)
+      queue = channel.queue("test.em-synchrony.queue1", :auto_delete => true)
+      EM.stop
+    end
+  end
+
   it "should yield until the exchange is created" do
     EM.synchrony do
       connection = EM::Synchrony::AMQP.connect
@@ -65,8 +74,8 @@ describe EM::Synchrony::AMQP do
       channel = EM::Synchrony::AMQP::Channel.new(connection)
       ex = EM::Synchrony::AMQP::Exchange.new(channel, :fanout, "test.em-synchrony.fanout")
 
-      q1 = EM::Synchrony::AMQP::Queue.new(channel, "test.em-synchrony.queues.1", :auto_delete => true)
-      q2 = EM::Synchrony::AMQP::Queue.new(channel, "test.em-synchrony.queues.2", :auto_delete => true)
+      q1 = channel.queue("test.em-synchrony.queues.1", :auto_delete => true)
+      q2 = channel.queue("test.em-synchrony.queues.2", :auto_delete => true)
 
       q1.bind(ex)
       q2.bind(ex)
