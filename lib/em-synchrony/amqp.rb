@@ -92,15 +92,14 @@ module EventMachine
           exchange
         end
 
-        %w[publish delete].each do |type|
-          line = __LINE__ + 2
-          code = <<-EOF
-            alias :a#{type} :#{type}
-            def #{type}(*params)
-              EM::Synchrony::AMQP.sync { |f| self.a#{type}(*params, &EM::Synchrony::AMQP.sync_cb(f)) }
-            end
-          EOF
-          module_eval(code, __FILE__, line)
+        alias :apublish :publish
+        def publish payload, options = {}
+          apublish(payload, options)
+        end
+
+        alias :adelete :delete
+        def delete(opts = {})
+          EM::Synchrony::AMQP.sync { |f| adelete(opts, &EM::Synchrony::AMQP.sync_cb(f)) }
         end
       end
 
