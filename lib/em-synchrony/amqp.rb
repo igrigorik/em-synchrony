@@ -144,7 +144,7 @@ module EventMachine
           module_eval(code, __FILE__, line)
         end
       end
-
+      ::AMQP.client = ::EM::Synchrony::AMQP::Session
     end
   end
 end
