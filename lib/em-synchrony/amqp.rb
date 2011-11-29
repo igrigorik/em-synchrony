@@ -18,7 +18,7 @@ module EventMachine
         end
 
         def sync_cb fiber
-          Proc.new do |*args|
+          lambda do |*args|
             if fiber == Fiber.current
               return *args
             else
