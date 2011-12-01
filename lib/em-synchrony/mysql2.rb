@@ -24,6 +24,10 @@ module Mysql2
       def query(sql, opts={})
         deferable = aquery(sql, opts)
 
+        # if EM is not running, we just get the sql result directly
+        # if we get a deferable, then let's do the deferable thing.
+        return deferable unless deferable.kind_of? ::EM::DefaultDeferrable
+
         f = Fiber.current
         deferable.callback { |res| f.resume(res) }
         deferable.errback  { |err| f.resume(err) }
