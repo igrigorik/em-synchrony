@@ -54,8 +54,8 @@ module EventMachine
         end
       end
 
-      df.callback &xback
-      df.errback &xback
+      df.callback(&xback)
+      df.errback(&xback)
 
       Fiber.yield
     end
@@ -70,6 +70,12 @@ module EventMachine
     def self.sleep(secs)
       fiber = Fiber.current
       EM::Timer.new(secs) { fiber.resume }
+      Fiber.yield
+    end
+
+    def self.wait_next_tick
+      fiber = Fiber.current
+      EM.next_tick { fiber.resume }
       Fiber.yield
     end
 
@@ -103,6 +109,61 @@ module EventMachine
     #
     def self.gets
       EventMachine::Synchrony::Keyboard.new.gets
+    end
+
+    module TrampolineHandler
+      def read_deferrables
+        @read_deferrables ||= []
+      end
+
+      def write_deferrables
+        @write_deferrables ||= []
+      end
+
+      def notify_readable
+        self.notify_readable = false
+        rd = read_deferrables
+        @read_deferrables = []
+        rd.each(&:succeed)
+      end
+
+      def notify_writable
+        self.notify_writable = false
+        wd = write_deferrables
+        @write_deferrables = []
+        wd.each(&:succeed)      
+      end
+
+      def unbind
+        wd = write_deferrables
+        @write_deferrables = []
+        rd = read_deferrables
+        @read_deferrables = []
+        EM::Synchrony.trampoline_connections.delete @fd
+        wd.each(&:succeed)
+        rd.each(&:succeed)
+      end
+    end
+
+    def self.trampoline_connections
+      @trampoline_connections ||= {}
+    end
+
+    # Wait fd
+    # TODO: exceptions
+    def self.trampoline(fd, options = {})
+      deferrable = EM::DefaultDeferrable.new
+      deferrable.timeout options[:timeout] if options[:timeout]
+      conn = trampoline_connections[fd] ||= EM.watch(fd, TrampolineHandler)
+      if options[:read]
+        conn.notify_readable = true
+        conn.read_deferrables << deferrable
+      end
+      if options[:write]
+        conn.notify_writable = true
+        conn.write_deferrables << deferrable
+      end    
+      EM::Synchrony.sync deferrable
     end
   end
 end

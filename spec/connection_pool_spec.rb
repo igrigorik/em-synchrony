@@ -16,8 +16,8 @@ describe EventMachine::Synchrony::ConnectionPool do
         start = now
 
         multi = EventMachine::Synchrony::Multi.new
-        multi.add :a, db.aquery(QUERY)
-        multi.add :b, db.aquery(QUERY)
+        multi.add :a, db.async_query(QUERY)
+        multi.add :b, db.async_query(QUERY)
         res = multi.perform
 
         (now - start.to_f).should be_within(DELAY * 2 * 0.15).of(DELAY * 2)
@@ -40,8 +40,8 @@ describe EventMachine::Synchrony::ConnectionPool do
         start = now
 
         multi = EventMachine::Synchrony::Multi.new
-        multi.add :a, db.aquery(QUERY)
-        multi.add :b, db.aquery(QUERY)
+        multi.add :a, db.async_query(QUERY)
+        multi.add :b, db.async_query(QUERY)
         res = multi.perform
 
         (now - start.to_f).should be_within(DELAY * 0.15).of(DELAY)
@@ -100,8 +100,8 @@ describe EventMachine::Synchrony::ConnectionPool do
           Fiber.new {
 
             multi = EventMachine::Synchrony::Multi.new
-            multi.add :a, db.aquery(QUERY)
-            multi.add :b, db.aquery(QUERY)
+            multi.add :a, db.async_query(QUERY)
+            multi.add :b, db.async_query(QUERY)
             results.push multi.perform
 
             fiber.transfer if results.size == 3

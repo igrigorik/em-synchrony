@@ -86,8 +86,8 @@ EventMachine.synchrony do
     end
 
     multi = EventMachine::Synchrony::Multi.new
-    multi.add :a, db.aquery("select sleep(1)")
-    multi.add :b, db.aquery("select sleep(1)")
+    multi.add :a, db.async_query("select sleep(1)")
+    multi.add :b, db.async_query("select sleep(1)")
     res = multi.perform
 
     p "Look ma, no callbacks, and parallel MySQL requests!"

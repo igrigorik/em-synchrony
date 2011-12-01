@@ -18,7 +18,7 @@ EM.synchrony do
   # insert fetched HTTP data into a mysql database, using at most 2 connections at a time
   # - note that we're writing async code within the callback!
   EM::Synchrony::Iterator.new(data, 2).each do |page, iter|
-    db.aquery("INSERT INTO table (data) VALUES(#{page});")
+    db.async_query("INSERT INTO table (data) VALUES(#{page});")
     db.callback { iter.return(http) }
   end
 

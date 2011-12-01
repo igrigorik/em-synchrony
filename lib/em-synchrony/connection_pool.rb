@@ -63,7 +63,7 @@ module EventMachine
         # data is available, or request is complete)
         #
         def method_missing(method, *args, &blk)
-          async = (method[0,1] == "a")
+          async = (method[0,6] == "async_")
 
           execute(async) do |conn|
             df = conn.send(method, *args, &blk)

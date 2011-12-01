@@ -1,5 +1,6 @@
 require "spec/helper/all"
 require "em-synchrony/activerecord"
+require "em-synchrony/group"
 
 # create database widgets;
 # use widgets;
@@ -44,6 +45,26 @@ describe "Fiberized ActiveRecord driver for mysql2" do
       res.size.should == 2
 
       EventMachine.stop
+    end
+  end
+
+  it "should fire 100 parallel requests in fibers" do
+    EM.synchrony do
+      ActiveRecord::Base.establish_connection(
+        :adapter => 'em_mysql2',
+        :database => 'widgets',
+        :username => 'root'
+      )
+      g = EM::Synchrony::Group.new
+      100.times do        
+        Fiber.new(&g.with do
+          Widget.find_by_sql(QUERY)
+        end).resume
+      end
+      g.wait
+      ActiveRecord::Base.connection_pool.connections.size.should eql(5)
+      EM.stop
+
     end
   end
 
