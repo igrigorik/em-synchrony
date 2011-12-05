@@ -68,7 +68,7 @@ describe EM::Synchrony::AMQP do
   end
 
   it "should publish and receive messages" do
-    publish_number = 10
+    nb_msg = 10
     EM.synchrony do
       connection = EM::Synchrony::AMQP.connect
       channel = EM::Synchrony::AMQP::Channel.new(connection)
@@ -80,23 +80,23 @@ describe EM::Synchrony::AMQP do
       q1.bind(ex)
       q2.bind(ex)
 
-      q1_nb, q2_nb = 0, 0
-      stop_cb = proc { EM.stop if q1_nb + q2_nb == 2 * publish_number }
+      nb_q1, nb_q2 = 0, 0
+      stop_cb = proc { EM.stop if nb_q1 + nb_q2 == 2 * nb_msg }
 
       q1.subscribe do |meta, msg|
         msg.should match(/^Bonjour [0-9]+/)
-        q1_nb += 1
+        nb_q1 += 1
         stop_cb.call
       end
 
       q2.subscribe do |meta, msg|
         msg.should match(/^Bonjour [0-9]+/)
-        q2_nb += 1
+        nb_q2 += 1
         stop_cb.call
       end
 
       Fiber.new do
-        publish_number.times do |n|
+        nb_msg.times do |n|
           ex.publish("Bonjour #{n}")
           EM::Synchrony.sleep(0.1)
         end
@@ -104,4 +104,43 @@ describe EM::Synchrony::AMQP do
     end
   end
 
+  it "should handle several consumers" do
+    nb_msg = 10
+    EM.synchrony do
+      connection = EM::Synchrony::AMQP.connect
+      channel = EM::Synchrony::AMQP::Channel.new(connection)
+      exchange = EM::Synchrony::AMQP::Exchange.new(channel, :fanout, "test.em-synchrony.consumers.fanout")
+
+      queue = channel.queue("test.em-synchrony.consumers.queue", :auto_delete => true)
+      queue.bind(exchange)
+
+      cons1 = EM::Synchrony::AMQP::Consumer.new(channel, queue)
+      cons2 = EM::Synchrony::AMQP::Consumer.new(channel, queue)
+
+      nb_cons1, nb_cons2 = 0, 0
+      stop_cb = Proc.new do
+        if nb_cons1 + nb_cons2 == nb_msg
+          nb_cons1.should eq(nb_cons2)
+          EM.stop
+        end
+      end
+
+      cons1.on_delivery do |meta, msg|
+        msg.should match(/^Bonjour [0-9]+/)
+        nb_cons1 += 1
+        stop_cb.call
+      end.consume
+
+      cons2.on_delivery do |meta, msg|
+        msg.should match(/^Bonjour [0-9]+/)
+        nb_cons2 += 1
+        stop_cb.call
+      end.consume
+
+      10.times do |n|
+        exchange.publish("Bonjour #{n}")
+        EM::Synchrony.sleep(0.1)
+      end
+   end
+  end
 end

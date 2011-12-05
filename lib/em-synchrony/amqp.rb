@@ -83,6 +83,36 @@ module EventMachine
         end
       end
 
+      class Consumer < ::AMQP::Consumer
+        alias :aon_delivery :on_delivery
+        def on_delivery(&block)
+          Fiber.new do
+            aon_delivery(&EM::Synchrony::AMQP.sync_cb(Fiber.current))
+            loop { block.call(Fiber.yield) }
+          end.resume
+          self
+        end
+
+        alias :aconsume :consume
+        def consume(nowait = false)
+          ret = EM::Synchrony::AMQP.sync { |f| self.aconsume(nowait, &EM::Synchrony::AMQP.sync_cb(f)) }
+          raise Error.new(ret.to_s) unless ret.is_a?(::AMQ::Protocol::Basic::ConsumeOk)
+          self
+        end
+
+        alias :aresubscribe :resubscribe
+        def resubscribe
+          EM::Synchrony::AMQP.sync { |f| self.aconsume(&EM::Synchrony::AMQP.sync_cb(f)) }
+          self
+        end
+
+        alias :acancel :cancel
+        def cancel(nowait = false)
+          EM::Synchrony::AMQP.sync { |f| self.aconsume(nowait, &EM::Synchrony::AMQP.sync_cb(f)) }
+          self
+        end
+      end
+
       class Exchange < ::AMQP::Exchange
         def initialize(channel, type, name, opts = {}, &block)
           f = Fiber.current
