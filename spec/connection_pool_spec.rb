@@ -9,7 +9,7 @@ describe EventMachine::Synchrony::ConnectionPool do
     EventMachine.run do
 
       db = EventMachine::Synchrony::ConnectionPool.new(size: 1) do
-        EventMachine::MySQL.new(host: "localhost")
+        Mysql2::EM::Client.new
       end
 
       Fiber.new {
@@ -33,7 +33,7 @@ describe EventMachine::Synchrony::ConnectionPool do
     EventMachine.run do
 
       db = EventMachine::Synchrony::ConnectionPool.new(size: 2) do
-        EventMachine::MySQL.new(host: "localhost")
+        Mysql2::EM::Client.new
       end
 
       Fiber.new {
@@ -57,7 +57,7 @@ describe EventMachine::Synchrony::ConnectionPool do
     EventMachine.run do
 
       db = EventMachine::Synchrony::ConnectionPool.new(size: 2) do
-        EventMachine::MySQL.new(host: "localhost")
+        Mysql2::EM::Client.new
       end
 
       Fiber.new {
@@ -88,7 +88,7 @@ describe EventMachine::Synchrony::ConnectionPool do
     EventMachine.run do
 
       db = EventMachine::Synchrony::ConnectionPool.new(size: 5) do
-        EventMachine::MySQL.new(host: "localhost")
+        Mysql2::EM::Client.new
       end
 
       Fiber.new {
