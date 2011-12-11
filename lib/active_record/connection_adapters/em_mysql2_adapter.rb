@@ -2,13 +2,13 @@
 
 # AR adapter for using a fibered mysql2 connection with EM
 # This adapter should be used within Thin or Unicorn with the rack-fiber_pool middleware.
-# Just update your database.yml's adapter to be 'em_mysql2', set :pool to 1 and :real_pool
+# Just update your database.yml's adapter to be 'em_mysql2'
 # to real connection pool size.
 
 module ActiveRecord
   class Base
     def self.em_mysql2_connection(config)
-      client = EM::Synchrony::ActiveRecord::ConnectionPool.new(size: config[:real_pool]) do
+      client = EM::Synchrony::ActiveRecord::ConnectionPool.new(size: config[:pool]) do
         conn = EM::Synchrony::ActiveRecord::Mysql2Client.new(config.symbolize_keys)
         conn.open_transactions = 0
         conn.acquired = 0
