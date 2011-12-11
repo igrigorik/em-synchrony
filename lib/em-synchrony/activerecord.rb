@@ -70,6 +70,15 @@ module EM::Synchrony
         end
       end
 
+      def acquire(fiber)
+        return @reserved[fiber.object_id] if @reserved[fiber.object_id]
+        super
+      end
+
+      def connection
+        acquire(Fiber.current)
+      end
+
       # via method_missing affected_rows will be recognized as async method
       def affected_rows(*args, &blk)
         execute(false) do |conn|

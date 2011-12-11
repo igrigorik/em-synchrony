@@ -22,8 +22,7 @@ describe "Fiberized ActiveRecord driver for mysql2" do
         :adapter => 'em_mysql2',
         :database => 'widgets',
         :username => 'root',
-        :pool => 10,
-        :real_pool => 10
+        :pool => 10
       )
       Widget.delete_all
   end
