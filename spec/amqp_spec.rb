@@ -1,6 +1,4 @@
 require "spec/helper/all"
-require 'pp'
-require 'ruby-debug'
 
 describe EM::Synchrony::AMQP do
 
