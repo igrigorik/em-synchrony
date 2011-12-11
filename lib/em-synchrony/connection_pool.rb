@@ -32,7 +32,6 @@ module EventMachine
         # - if connection is available, pass it back to the calling block
         # - if pool is full, yield the current fiber until connection is available
         def acquire(fiber)
-
           if conn = @available.pop
             @reserved[fiber.object_id] = conn
             conn
