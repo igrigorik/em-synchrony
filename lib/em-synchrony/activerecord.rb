@@ -1,7 +1,7 @@
+require 'em-synchrony'
 require 'active_record'
 require 'active_record/connection_adapters/abstract/connection_pool'
 require 'active_record/connection_adapters/abstract_adapter'
-require 'active_record/connection_adapters/mysql2_adapter'
 require 'em-synchrony/thread'
 
 module ActiveRecord
@@ -22,12 +22,25 @@ end
 
 module EM::Synchrony
   module ActiveRecord
-    class Mysql2Client < Mysql2::EM::Client
-      attr_accessor :open_transactions
-      attr_accessor :acquired
-    end
+    module Client
+      def open_transactions
+        @open_transactions ||= 0
+      end
 
-    class Adapter < ::ActiveRecord::ConnectionAdapters::Mysql2Adapter
+      def open_transactions=(v)
+        @open_transactions = v
+      end
+
+      def acquired_for_connection_pool
+        @acquired_for_connection_pool ||= 0
+      end
+
+      def acquired_for_connection_pool=(v)
+        @acquired_for_connection_pool = v
+      end
+    end
+    
+    module Adapter
       def configure_connection
         nil
       end
@@ -62,11 +75,11 @@ module EM::Synchrony
         f = Fiber.current
         begin
           conn = acquire(f)
-          conn.acquired += 1
+          conn.acquired_for_connection_pool += 1
           yield conn
         ensure
-          conn.acquired -= 1
-          release(f) if !async && conn.acquired == 0
+          conn.acquired_for_connection_pool -= 1
+          release(f) if !async && conn.acquired_for_connection_pool == 0
         end
       end
 
