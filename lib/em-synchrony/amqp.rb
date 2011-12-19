@@ -18,7 +18,7 @@ module EventMachine
         end
 
         def sync_cb fiber
-          Proc.new do |*args|
+          lambda do |*args|
             if fiber == Fiber.current
               return *args
             else
@@ -70,7 +70,7 @@ module EventMachine
           register_queue(queue)
         end
 
-        %w[queue flow prefetch recover tx_select tx_commit tx_rollback reset]
+        %w[flow recover tx_select tx_commit tx_rollback reset]
         .each do |type|
           line = __LINE__ + 2
           code = <<-EOF
@@ -83,6 +83,36 @@ module EventMachine
         end
       end
 
+      class Consumer < ::AMQP::Consumer
+        alias :aon_delivery :on_delivery
+        def on_delivery(&block)
+          Fiber.new do
+            aon_delivery(&EM::Synchrony::AMQP.sync_cb(Fiber.current))
+            loop { block.call(Fiber.yield) }
+          end.resume
+          self
+        end
+
+        alias :aconsume :consume
+        def consume(nowait = false)
+          ret = EM::Synchrony::AMQP.sync { |f| self.aconsume(nowait, &EM::Synchrony::AMQP.sync_cb(f)) }
+          raise Error.new(ret.to_s) unless ret.is_a?(::AMQ::Protocol::Basic::ConsumeOk)
+          self
+        end
+
+        alias :aresubscribe :resubscribe
+        def resubscribe
+          EM::Synchrony::AMQP.sync { |f| self.aconsume(&EM::Synchrony::AMQP.sync_cb(f)) }
+          self
+        end
+
+        alias :acancel :cancel
+        def cancel(nowait = false)
+          EM::Synchrony::AMQP.sync { |f| self.aconsume(nowait, &EM::Synchrony::AMQP.sync_cb(f)) }
+          self
+        end
+      end
+
       class Exchange < ::AMQP::Exchange
         def initialize(channel, type, name, opts = {}, &block)
           f = Fiber.current
@@ -92,15 +122,14 @@ module EventMachine
           exchange
         end
 
-        %w[publish delete].each do |type|
-          line = __LINE__ + 2
-          code = <<-EOF
-            alias :a#{type} :#{type}
-            def #{type}(*params)
-              EM::Synchrony::AMQP.sync { |f| self.a#{type}(*params, &EM::Synchrony::AMQP.sync_cb(f)) }
-            end
-          EOF
-          module_eval(code, __FILE__, line)
+        alias :apublish :publish
+        def publish payload, options = {}
+          apublish(payload, options)
+        end
+
+        alias :adelete :delete
+        def delete(opts = {})
+          EM::Synchrony::AMQP.sync { |f| adelete(opts, &EM::Synchrony::AMQP.sync_cb(f)) }
         end
       end
 
@@ -145,7 +174,7 @@ module EventMachine
           module_eval(code, __FILE__, line)
         end
       end
-
+      ::AMQP.client = ::EM::Synchrony::AMQP::Session
     end
   end
 end
