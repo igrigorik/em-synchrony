@@ -19,6 +19,7 @@ Supported clients:
  * [em-mongo](http://github.com/igrigorik/em-synchrony/blob/master/spec/em-mongo_spec.rb): .find, .first are synchronous
  * [mongoid](http://github.com/igrigorik/em-synchrony/blob/master/spec/mongo_spec.rb): all functions synchronous, plus Rails compatibility
  * em-jack: a[method]'s are async, and all regular jack method's are synchronous
+ * [AMQP](http://github.com/ruby-amqp/amqp): most of functions are synchronous (see specs)
 
 Other clients with native Fiber support:
 
