@@ -11,6 +11,29 @@ describe EM::Hiredis do
     end
   end
 
+  it "should work with compact connect syntax" do
+    EventMachine.synchrony do
+      redis = EM::Hiredis.connect
+
+      redis.set('a', 'bar')
+      redis.get('a').should == 'bar'
+
+      EM.stop
+    end
+  end
+
+  it "should work with manual db select" do
+    EventMachine.synchrony do
+      redis = EM::Hiredis.connect 'redis://127.0.0.1:6379'
+      redis.select(0)
+
+      redis.set('a', 'baz')
+      redis.get('a').should == 'baz'
+
+      EM.stop
+    end
+  end
+
   it "should get/set records synchronously" do
     EventMachine.synchrony do
       redis = EM::Hiredis::Client.connect

@@ -16,7 +16,6 @@ describe "Fiberized ActiveRecord driver for mysql2" do
   DELAY = 0.25
   QUERY = "SELECT sleep(#{DELAY})"
 
-
   def establish_connection
       ActiveRecord::Base.establish_connection(
         :adapter => 'em_mysql2',
