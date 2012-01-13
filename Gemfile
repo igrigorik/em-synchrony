@@ -3,6 +3,7 @@ source :gemcutter
 gem 'eventmachine', :git => 'git://github.com/eventmachine/eventmachine.git'
 
 group :development do
+  gem 'rake'
   gem 'rspec'
   gem 'em-http-request', :git => 'git://github.com/igrigorik/em-http-request'
   gem 'remcached'
