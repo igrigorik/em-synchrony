@@ -49,7 +49,7 @@ describe EM::Hiredis do
   it "should incr/decr key synchronously" do
     EventMachine.synchrony do
       redis = EM::Hiredis::Client.connect
-      redis.delete('key')
+      redis.del('key')
 
       redis.incr('key')
       redis.get('key').to_i.should == 1
