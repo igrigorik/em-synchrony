@@ -5,7 +5,9 @@ rescue LoadError => error
 end
 
 # monkey-patch Mongo to use em-synchrony's socket and thread classs
-silence_warnings do
+old_verbose = $VERBOSE
+begin
+  $VERBOSE = nil
   class Mongo::Connection
     TCPSocket = ::EventMachine::Synchrony::TCPSocket
     Mutex = ::EventMachine::Synchrony::Thread::Mutex
@@ -29,4 +31,6 @@ silence_warnings do
   end
 
   Mongo::TimeoutHandler = EventMachine::Synchrony::MongoTimeoutHandler
+ensure
+  $VERBOSE = old_verbose
 end
