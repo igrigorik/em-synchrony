@@ -5,9 +5,9 @@ module EventMachine
         alias_method :_old_new, :new
         def new(*args)
           if args.size == 1
-            _old_new *args
+            _old_new(*args)
           else
-            socket = EventMachine::connect( *args[0..1], self )
+            socket = EventMachine::connect(*args[0..1], self)
             raise SocketError unless socket.sync(:in)  # wait for connection
             socket
           end

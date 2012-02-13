@@ -54,8 +54,8 @@ module EventMachine
         end
       end
 
-      df.callback &xback
-      df.errback &xback
+      df.callback(&xback)
+      df.errback(&xback)
 
       Fiber.yield
     end
