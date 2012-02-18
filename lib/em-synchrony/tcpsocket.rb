@@ -34,7 +34,7 @@ module EventMachine
       def setsockopt(level, name, value); end
 
       def send(msg, flags = 0)
-        raise "Unknown flags in send(): #{flags}"  if flags.nonzero?
+        raise "Unknown flags in send(): #{flags}" if flags.nonzero?
         len = msg.bytesize
         write_data(msg) or sync(:out) or raise(IOError)
         len

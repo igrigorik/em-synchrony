@@ -2,6 +2,8 @@ module EventMachine
   module Synchrony
 
     class ConnectionPool
+      undef :send
+
       def initialize(opts, &block)
         @reserved  = {}   # map of in-progress connections
         @available = []   # pool of free connections
@@ -65,7 +67,7 @@ module EventMachine
           async = (method[0,1] == "a")
 
           execute(async) do |conn|
-            df = conn.send(method, *args, &blk)
+            df = conn.__send__(method, *args, &blk)
 
             if async
               fiber = Fiber.current

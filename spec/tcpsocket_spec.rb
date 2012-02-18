@@ -17,4 +17,14 @@ describe EventMachine::Synchrony::TCPSocket  do
       EM.stop
     end
   end
+
+  it 'should accept "send" when wrapped in a connection pool' do
+    EventMachine.synchrony do
+      @socket = EventMachine::Synchrony::ConnectionPool.new(size: 1) do
+        EventMachine::Synchrony::TCPSocket.new 'eventmachine.rubyforge.org', 80
+      end
+      @socket.send("GET / HTTP1.1\r\n\r\n").class.should be(Fixnum)
+      EM.stop
+    end
+  end
 end
