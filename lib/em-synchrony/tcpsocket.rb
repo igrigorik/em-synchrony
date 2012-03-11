@@ -60,6 +60,7 @@ module EventMachine
       def unbind
         @in_req.fail  nil if @in_req
         @out_req.fail nil if @out_req
+        close
       end
 
       def receive_data(data)
