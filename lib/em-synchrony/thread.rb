@@ -6,25 +6,23 @@ module EventMachine
       class Mutex
         def initialize
           @waiters = []
-          @current_fiber = nil
         end
 
         def lock
-          raise FiberError if @current_fiber && @current_fiber == Fiber.current  
-          if @current_fiber
-            @waiters << Fiber.current
-            Fiber.yield
-          end
-          @current_fiber = Fiber.current
+          current = Fiber.current
+          raise FiberError if @waiters.include?(current)
+          @waiters << current
+          Fiber.yield unless @waiters.first == current
           true
         end
 
         def locked?
-          !@current_fiber.nil?
+          !@waiters.empty?
         end
 
         def sleep(timeout = nil)
           unlock    
+          beg = Time.now
           if timeout
             f = Fiber.current
             timer = EM.add_timer(timeout) do
@@ -37,28 +35,25 @@ module EventMachine
             Fiber.yield
           end
           lock
+          Time.now - beg
         end
 
         def try_lock
-          if @current_fiber
-            false
-          else
-            @current_fiber = Fiber.current
-            true
-          end
+          lock unless locked?
         end
 
         def unlock
-          raise FiberError if @current_fiber != Fiber.current  
-          @current_fiber = nil
-          if f = @waiters.shift
-            f.resume
+          raise FiberError unless @waiters.first == Fiber.current  
+          @waiters.shift
+          unless @waiters.empty?
+            EM.next_tick{ @waiters.first.resume }
           end
+          self
         end
 
-        def synchronize(&blk)
+        def synchronize
           lock
-          blk.call
+          yield
         ensure
           unlock
         end
@@ -66,14 +61,58 @@ module EventMachine
       end
 
       class ConditionVariable
-        def wait( mutex )
-          @deferrable = EventMachine::DefaultDeferrable.new
-          EventMachine::Synchrony.sync @deferrable
-          @deferrable = nil
+        #
+        # Creates a new ConditionVariable
+        #
+        def initialize
+          @waiters = []
         end
 
+        #
+        # Releases the lock held in +mutex+ and waits; reacquires the lock on wakeup.
+        #
+        # If +timeout+ is given, this method returns after +timeout+ seconds passed,
+        # even if no other thread doesn't signal.
+        #
+        def wait(mutex, timeout=nil)
+          current = Fiber.current
+          begin
+            @waiters << current
+            mutex.sleep timeout
+          ensure
+            @waiters.delete current
+          end
+          self
+        end
+
+        #
+        # Wakes up the first thread in line waiting for this lock.
+        #
         def signal
-          @deferrable and @deferrable.succeed
+          while f = @waiters.shift
+            if f.alive?
+              # XXX Should we rescue from FiberError?
+              EM.next_tick{ f.resume }
+              break
+            end
+          end
+          self
+        end
+
+        #
+        # Wakes up all threads waiting for this lock.
+        #
+        def broadcast
+          # TODO: imcomplete
+          waiters0 = @waiters.dup
+          @waiters.clear
+          waiters0.each do |f|
+            if f.alive?
+              # XXX Should we rescue from FiberError?
+              EM.next_tick{ f.resume }
+            end
+          end
+          self
         end
       end
 
