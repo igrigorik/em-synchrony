@@ -111,8 +111,81 @@ describe EventMachine::Synchrony::Thread::Mutex do
               EM.add_timer(0.1) { EM.stop }
             end
           end
+          it "should resume in nested Fiber" do
+            EM.synchrony do
+              f = Fiber.new do
+                m.synchronize do
+                  t = m.sleep(0.05)
+                  t.should >= 0.05
+                end
+                EM.stop
+              end
+              f.resume
+            end
+          end
         end
       end
+    end
+  end
+  describe EventMachine::Synchrony::Thread::ConditionVariable do
+    let(:c){ EM::Synchrony::Thread::ConditionVariable.new }
+    it "should wakeup waiter" do
+      i = ''
+      EM.synchrony do
+        f1 = Fiber.new do
+          m.synchronize do
+            i << 'a'
+            c.wait(m)
+            i << 'c'
+          end
+          EM.stop
+        end.resume
+        f2 = Fiber.new do
+          i << 'b'
+          c.signal
+        end.resume
+      end
+      i.should == 'abc'
+    end
+    it 'should allow to play ping-pong' do
+      i = ''
+      EM.synchrony do
+        f1 = Fiber.new do
+          m.synchronize do
+            i << 'pi'
+            c.wait(m)
+            i << '-po'
+            c.signal
+          end
+        end.resume
+        f2 = Fiber.new do
+          m.synchronize do
+            i << 'ng'
+            c.signal
+            c.wait(m)
+            i << 'ng'
+          end
+          EM.stop
+        end.resume
+      end
+      i.should == 'ping-pong'
+    end
+    it 'should not raise, when timer wakes up fiber between `signal` and `next_tick`' do
+      proc {
+        EM.synchrony do
+          f = Fiber.new do
+            m.synchronize do
+              c.wait(m, 0.0001)
+            end
+            EM.add_timer(0.001){ EM.stop }
+          end
+          i = 0
+          f.resume
+          EM.next_tick{
+            c.signal
+          }
+        end
+      }.should_not raise_error
     end
   end
 end
