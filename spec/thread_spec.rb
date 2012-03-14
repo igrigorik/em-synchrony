@@ -170,5 +170,22 @@ describe EventMachine::Synchrony::Thread::Mutex do
       end
       i.should == 'ping-pong'
     end
+    it 'should not raise, when timer wakes up fiber between `signal` and `next_tick`' do
+      proc {
+        EM.synchrony do
+          f = Fiber.new do
+            m.synchronize do
+              c.wait(m, 0.0001)
+            end
+            EM.add_timer(0.001){ EM.stop }
+          end
+          i = 0
+          f.resume
+          EM.next_tick{
+            c.signal
+          }
+        end
+      }.should_not raise_error
+    end
   end
 end
