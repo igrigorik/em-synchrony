@@ -6,6 +6,7 @@ module EventMachine
       class Mutex
         def initialize
           @waiters = []
+          @slept = {}
         end
 
         def lock
@@ -20,15 +21,25 @@ module EventMachine
           !@waiters.empty?
         end
 
+        def _wakeup(fiber)
+          fiber.resume if @slept.delete(fiber) && fiber.alive?
+        end
+
+        def _delete_from_slept(fiber)
+          @slept.delete(fiber)
+        end
+
         def sleep(timeout = nil)
           unlock    
           beg = Time.now
+          current = Fiber.current
+          @slept[current] = true
           if timeout
-            f = Fiber.current
             timer = EM.add_timer(timeout) do
-              f.resume
+              _wakeup(current)
             end
             res = Fiber.yield
+            _delete_from_slept(current)
             EM.cancel_timer timer # if we resumes not via timer
             res
           else
@@ -76,25 +87,33 @@ module EventMachine
         #
         def wait(mutex, timeout=nil)
           current = Fiber.current
+          pair = [mutex, current]
           begin
-            @waiters << current
+            @waiters << pair
             mutex.sleep timeout
           ensure
-            @waiters.delete current
+            @waiters.delete pair
           end
           self
+        end
+
+        def _wakeup(mutex, fiber)
+          if fiber.alive?
+            EM.next_tick {
+              mutex._wakeup(fiber)
+            }
+          else
+            mutex._delete_from_slept(fiber)
+          end
         end
 
         #
         # Wakes up the first thread in line waiting for this lock.
         #
         def signal
-          while f = @waiters.shift
-            if f.alive?
-              # XXX Should we rescue from FiberError?
-              EM.next_tick{ f.resume }
-              break
-            end
+          while (pair = @waiters.shift)
+            _wakeup(*pair)
+            break if pair[1].alive?
           end
           self
         end
@@ -103,15 +122,10 @@ module EventMachine
         # Wakes up all threads waiting for this lock.
         #
         def broadcast
-          # TODO: imcomplete
-          waiters0 = @waiters.dup
-          @waiters.clear
-          waiters0.each do |f|
-            if f.alive?
-              # XXX Should we rescue from FiberError?
-              EM.next_tick{ f.resume }
-            end
+          @waiters.each do |mutex, fiber|
+            _wakeup(mutex, fiber)
           end
+          @waiters.clear
           self
         end
       end
