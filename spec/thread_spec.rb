@@ -111,6 +111,18 @@ describe EventMachine::Synchrony::Thread::Mutex do
               EM.add_timer(0.1) { EM.stop }
             end
           end
+          it "should resume in nested Fiber" do
+            EM.synchrony do
+              f = Fiber.new do
+                m.synchronize do
+                  t = m.sleep(0.05)
+                  t.should >= 0.05
+                end
+                EM.stop
+              end
+              f.resume
+            end
+          end
         end
       end
     end
