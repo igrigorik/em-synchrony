@@ -22,11 +22,7 @@ module EventMachine
         end
 
         def _wakeup(fiber)
-          fiber.resume if @slept.delete(fiber) && fiber.alive?
-        end
-
-        def _delete_from_slept(fiber)
-          @slept.delete(fiber)
+          fiber.resume if @slept.delete(fiber)
         end
 
         def sleep(timeout = nil)
@@ -38,13 +34,13 @@ module EventMachine
             timer = EM.add_timer(timeout) do
               _wakeup(current)
             end
-            res = Fiber.yield
-            _delete_from_slept(current)
+            Fiber.yield
             EM.cancel_timer timer # if we resumes not via timer
-            res
           else
             Fiber.yield
           end
+          @slept.delete current
+          yield if block_given?
           lock
           Time.now - beg
         end
@@ -88,23 +84,20 @@ module EventMachine
         def wait(mutex, timeout=nil)
           current = Fiber.current
           pair = [mutex, current]
-          begin
-            @waiters << pair
-            mutex.sleep timeout
-          ensure
+          @waiters << pair
+          mutex.sleep timeout do
             @waiters.delete pair
           end
           self
         end
 
         def _wakeup(mutex, fiber)
-          if fiber.alive?
+          if alive = fiber.alive?
             EM.next_tick {
               mutex._wakeup(fiber)
             }
-          else
-            mutex._delete_from_slept(fiber)
           end
+          alive
         end
 
         #
@@ -112,8 +105,7 @@ module EventMachine
         #
         def signal
           while (pair = @waiters.shift)
-            _wakeup(*pair)
-            break if pair[1].alive?
+            break if _wakeup(*pair)
           end
           self
         end
