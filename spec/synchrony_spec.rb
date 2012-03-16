@@ -8,8 +8,11 @@ describe EM::Synchrony do
       Fiber.new {
         df = EM::DefaultDeferrable.new
         df.succeed args
-
         EM::Synchrony.sync(df).should == args
+
+        df = EM::DefaultDeferrable.new
+        df.succeed nil
+        EM::Synchrony.sync(df).should == nil
       }.resume
     end
   end

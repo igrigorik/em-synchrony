@@ -48,7 +48,7 @@ module EventMachine
       f = Fiber.current
       xback = proc do |*args|
         if f == Fiber.current
-          return args.one? ? args.first : args
+          return args.size == 1 ? args.first : args
         else
           f.resume(*args)
         end
