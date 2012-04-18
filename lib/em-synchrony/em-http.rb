@@ -13,7 +13,7 @@ module EventMachine
            f = Fiber.current
 
            conn = setup_request(:#{type}, options, &blk)
-           if conn.error.nil?
+           if conn.error.to_s.empty?
              conn.callback { f.resume(conn) }
              conn.errback  { f.resume(conn) }
              
