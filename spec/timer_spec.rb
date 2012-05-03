@@ -32,4 +32,11 @@ describe EventMachine::Synchrony do
     end
   end
 
+  it 'should return instance of EventMachine::Timer from add_timer method' do
+    EM.synchrony do
+      timer = EM::Synchrony.add_timer(0.1){}
+      timer.should be_instance_of(EventMachine::Timer)
+      EventMachine.stop
+    end
+  end
 end
