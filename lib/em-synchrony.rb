@@ -78,7 +78,7 @@ module EventMachine
     # continue using synchrony methods
     #
     def self.add_timer(interval, &blk)
-      EM.add_timer(interval) do
+      EM::Timer.new(interval) do
         Fiber.new { blk.call }.resume
       end
     end
