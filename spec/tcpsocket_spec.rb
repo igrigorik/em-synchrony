@@ -20,6 +20,19 @@ module SendAndKeepOpen
   end
 end
 
+def tcp_test(server_type, ops={}, &block)
+  Proc.new do
+    EventMachine.synchrony do
+      ops = {:stop => true}.merge ops
+      EM::start_server('localhost', 12345, server_type)
+      @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+      @socket.close if ops[:close]
+      block.call
+      EM.stop if ops[:stop]
+    end
+  end
+end
+
 describe EventMachine::Synchrony::TCPSocket  do
   context '.new' do
     context 'to an open TCP port on an resolvable host' do
@@ -59,36 +72,26 @@ describe EventMachine::Synchrony::TCPSocket  do
   context '#closed?' do
     context 'after calling #close' do
       it 'returns true' do
-        EventMachine.synchrony do
-          EM::start_server('localhost', 12345)
-          @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
-          @socket.close
+        tcp_test(SendAndKeepOpen, :close => true) do
           @socket.should be_closed
-          EM.stop
         end
       end
     end
     context 'after the peer has closed the connection' do
       context 'when we\'ve not yet read EOF' do
         it 'returns false' do
-          EventMachine.synchrony do
-            EM::start_server('localhost', 12345, SendAndClose)
-            @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+          tcp_test(SendAndClose) do
             @socket.read(2).size.should eq 2
             @socket.should_not be_closed
-            EM.stop
           end
         end
       end
       context 'when we\'ve read EOF' do
         it 'returns false' do
-          EventMachine.synchrony do
-            EM::start_server('localhost', 12345, SendAndClose)
-            @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+          tcp_test(SendAndClose) do
             @socket.read(10).size.should  < 10
             @socket.read(10).should be_nil
             @socket.should_not be_closed
-            EM.stop
           end
         end
       end
@@ -101,20 +104,15 @@ describe EventMachine::Synchrony::TCPSocket  do
         context 'when the connection is open' do
           context 'with greater or equal than the requested data buffered' do
             it 'returns the requested data and no more' do
-              EventMachine.synchrony do
-                EM::start_server('localhost', 12345, SendAndKeepOpen)
-                @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+              tcp_test(SendAndKeepOpen) do
                 @socket.read(2).size.should eq 2
                 @socket.read(1).size.should eq 1
-                EM.stop
               end
             end
           end
           context 'with less than the requested data buffered' do
             it 'blocks' do
-              EventMachine.synchrony do
-                EM::start_server('localhost', 12345, SendAndKeepOpen)
-                @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+              tcp_test(SendAndKeepOpen, :stop => false) do
                 @blocked = true
                 EM.next_tick { @blocked.should eq true;  EM.next_tick { EM.stop } }
                 @socket.read(10)
@@ -126,93 +124,68 @@ describe EventMachine::Synchrony::TCPSocket  do
         context 'when the peer has closed the connection' do
           context 'with no data buffered' do
             it 'returns nil' do
-              EventMachine.synchrony do
-                EM::start_server('localhost', 12345, SendAndClose)
-                @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+              tcp_test(SendAndClose) do
                 @socket.read(4).size.should eq 4
                 @socket.read(1).should be_nil
-                EM.stop
               end
             end
           end
           context 'with less than the requested data buffered' do
             it 'returns the buffered data' do
-              EventMachine.synchrony do
-                EM::start_server('localhost', 12345, SendAndClose)
-                @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+              tcp_test(SendAndClose) do
                 @socket.read(50).size.should eq 4
-                EM.stop
               end
             end
           end
           context 'with greater or equal than the requested data buffered' do
             it 'returns the requested data and no more' do
-              EventMachine.synchrony do
-                EM::start_server('localhost', 12345, SendAndClose)
+              tcp_test(SendAndClose) do
                 @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
                 @socket.read(2).size.should eq 2
-                EM.stop
               end
             end
           end
         end
         context 'when we closed the connection' do
           it 'raises IOError' do
-            EventMachine.synchrony do
-              EM::start_server('localhost', 12345, SendAndKeepOpen)
-              @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
-              @socket.close
+            tcp_test(SendAndKeepOpen, :close => true) do
               proc {
                 @socket.read(4)
               }.should raise_error(IOError)
-              EM.stop
             end
           end
         end
       end
       context 'with a negative length argument' do
         it 'raises ArgumentError' do
-          EventMachine.synchrony do
-            EM::start_server('localhost', 12345, SendAndKeepOpen)
-            @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+          tcp_test(SendAndKeepOpen) do
             proc {
               @socket.read(-10)
             }.should raise_error(ArgumentError)
-            EM.stop
           end
         end
       end
       context 'with a zero length argument' do
         context 'when the connection is open' do
           it 'returns an empty string' do
-            EventMachine.synchrony do
-              EM::start_server('localhost', 12345, SendAndKeepOpen)
-              @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+            tcp_test(SendAndKeepOpen) do
               @socket.read(0).should eq ""
-              EM.stop
             end
           end
         end
         context 'when the peer has closed the connection' do
           it 'returns an empty string' do
-            EventMachine.synchrony do
-              EM::start_server('localhost', 12345, SendAndClose)
-              @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+            tcp_test(SendAndClose) do
               @socket.read(0).should eq ""
-              EM.stop
             end
           end
         end
         context 'when we closed the connection' do
           it 'raises IOError' do
-            EventMachine.synchrony do
-              EM::start_server('localhost', 12345, SendAndKeepOpen)
-              @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
-              @socket.close
+            tcp_test(SendAndKeepOpen, :close => true) do
               proc {
                 @socket.read(0)
               }.should raise_error(IOError)
-              EM.stop
             end
           end
         end
@@ -221,50 +194,37 @@ describe EventMachine::Synchrony::TCPSocket  do
     context 'without a length argument' do
       context 'when the connection is open' do
         it 'blocks until the peer closes the connection and returns all data sent' do
-          EventMachine.synchrony do
-            EM::start_server('localhost', 12345, SendAndTimedClose)
-            @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+          tcp_test(SendAndTimedClose) do
             @blocked = true
             EM.next_tick { @blocked.should eq true }
             @socket.read(10).should eq '1234'
             @blocked = false
-            EM.stop
           end
         end
       end
       context 'when the peer has closed the connection' do
         context 'with no data buffered' do
           it 'returns an empty string' do
-            EventMachine.synchrony do
-              EM::start_server('localhost', 12345, SendAndClose)
-              @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+            tcp_test(SendAndClose) do
               @socket.read()
               @socket.read().should eq ""
-              EM.stop
             end
           end
         end
         context 'with data buffered' do
           it 'returns the buffered data' do
-            EventMachine.synchrony do
-              EM::start_server('localhost', 12345, SendAndClose)
-              @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+            tcp_test(SendAndClose) do
               @socket.read().should eq "1234"
-              EM.stop
             end
           end
         end
       end
       context 'when we closed the connection' do
         it 'raises IOError' do
-          EventMachine.synchrony do
-            EM::start_server('localhost', 12345, SendAndKeepOpen)
-            @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
-            @socket.close
+          tcp_test(SendAndKeepOpen, :close => true) do
             proc {
               @socket.read()
             }.should raise_error(IOError)
-            EM.stop
           end
         end
       end
@@ -277,30 +237,22 @@ describe EventMachine::Synchrony::TCPSocket  do
         context 'when the connection is open' do
           context 'with greater or equal than the requested data buffered' do
             it 'returns the requested data and no more' do
-              EventMachine.synchrony do
-                EM::start_server('localhost', 12345, SendAndKeepOpen)
-                @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+              tcp_test(SendAndKeepOpen) do
                 @socket.recv(2).size.should eq 2
                 @socket.recv(1).size.should eq 1
-                EM.stop
               end
             end
           end
           context 'with less than the requested data buffered' do
             it 'return the buffered data' do
-              EventMachine.synchrony do
-                EM::start_server('localhost', 12345, SendAndKeepOpen)
-                @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+              tcp_test(SendAndKeepOpen) do
                 @socket.recv(50).size.should eq 4
-                EM.stop
               end
             end
           end
           context 'with no buffered data' do
             it 'blocks' do
-              EventMachine.synchrony do
-                EM::start_server('localhost', 12345, SendAndKeepOpen)
-                @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+              tcp_test(SendAndKeepOpen, :stop => false) do
                 @socket.recv(10)
                 @blocked = true
                 EM.next_tick { @blocked.should eq true;  EM.next_tick { EM.stop } }
@@ -313,93 +265,67 @@ describe EventMachine::Synchrony::TCPSocket  do
         context 'when the peer has closed the connection' do
           context 'with no data buffered' do
             it 'returns an empty string' do
-              EventMachine.synchrony do
-                EM::start_server('localhost', 12345, SendAndClose)
-                @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+              tcp_test(SendAndClose) do
                 @socket.read(4).size.should eq 4
                 @socket.recv(1).should eq ""
-                EM.stop
               end
             end
           end
           context 'with less than the requested data buffered' do
             it 'returns the buffered data' do
-              EventMachine.synchrony do
-                EM::start_server('localhost', 12345, SendAndClose)
-                @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+              tcp_test(SendAndClose) do
                 @socket.recv(50).size.should eq 4
-                EM.stop
               end
             end
           end
           context 'with greater or equal than the requested data buffered' do
             it 'returns the requested data and no more' do
-              EventMachine.synchrony do
-                EM::start_server('localhost', 12345, SendAndClose)
-                @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+              tcp_test(SendAndClose) do
                 @socket.recv(2).size.should eq 2
-                EM.stop
               end
             end
           end
         end
         context 'when we closed the connection' do
           it 'raises IOError' do
-            EventMachine.synchrony do
-              EM::start_server('localhost', 12345, SendAndKeepOpen)
-              @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
-              @socket.close
+            tcp_test(SendAndKeepOpen, :close => true) do
               proc {
                 @socket.recv(4)
               }.should raise_error(IOError)
-              EM.stop
             end
           end
         end
       end
       context 'with a negative length argument' do
         it 'raises ArgumentError' do
-          EventMachine.synchrony do
-            EM::start_server('localhost', 12345, SendAndKeepOpen)
-            @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+          tcp_test(SendAndKeepOpen) do
             proc {
               @socket.recv(-10)
             }.should raise_error(ArgumentError)
-            EM.stop
           end
         end
       end
       context 'with a zero length argument' do
         context 'when the connection is open' do
           it 'returns an empty string' do
-            EventMachine.synchrony do
-              EM::start_server('localhost', 12345, SendAndKeepOpen)
-              @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+            tcp_test(SendAndKeepOpen) do
               @socket.recv(0).should eq ""
-              EM.stop
             end
           end
         end
         context 'when the peer has closed the connection' do
           it 'returns an empty string' do
-            EventMachine.synchrony do
-              EM::start_server('localhost', 12345, SendAndClose)
-              @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+            tcp_test(SendAndClose) do
               @socket.recv(0).should eq ""
-              EM.stop
             end
           end
         end
         context 'when we closed the connection' do
           it 'raises IOError' do
-            EventMachine.synchrony do
-              EM::start_server('localhost', 12345, SendAndKeepOpen)
-              @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
-              @socket.close
+            tcp_test(SendAndKeepOpen, :close => true) do
               proc {
                 @socket.recv(0)
               }.should raise_error(IOError)
-              EM.stop
             end
           end
         end
@@ -407,13 +333,10 @@ describe EventMachine::Synchrony::TCPSocket  do
     end
     context 'without a length argument' do
       it 'raises ArgumentError' do
-        EventMachine.synchrony do
-          EM::start_server('localhost', 12345, SendAndKeepOpen)
-          @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+        tcp_test(SendAndKeepOpen) do
           proc {
             @socket.recv()
           }.should raise_error(ArgumentError)
-          EM.stop
         end
       end
     end
@@ -422,9 +345,7 @@ describe EventMachine::Synchrony::TCPSocket  do
   context '#write' do
     context 'when the peer has closed the connection' do
       it 'raises Errno::EPIPE' do
-        EventMachine.synchrony do
-          EM::start_server('localhost', 12345, SendAndClose)
-          @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+        tcp_test(SendAndClose, :stop => false) do
           EM.add_timer(0.01) do
             proc {
               @socket.write("foo")
@@ -436,14 +357,10 @@ describe EventMachine::Synchrony::TCPSocket  do
     end
     context 'when we closed the connection' do
       it 'raises IOError' do
-        EventMachine.synchrony do
-          EM::start_server('localhost', 12345, SendAndKeepOpen)
-          @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
-          @socket.close
+        tcp_test(SendAndKeepOpen, :close => true) do
           proc {
             @socket.write("foo")
           }.should raise_error(IOError)
-          EM.stop
         end
       end
     end
@@ -452,9 +369,7 @@ describe EventMachine::Synchrony::TCPSocket  do
   context '#send' do
     context 'when the peer has closed the connection' do
       it 'raises Errno::EPIPE' do
-        EventMachine.synchrony do
-          EM::start_server('localhost', 12345, SendAndClose)
-          @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+        tcp_test(SendAndClose, :stop => false) do
           EM.add_timer(0.01) do
             proc {
               @socket.send("foo",0)
@@ -466,26 +381,19 @@ describe EventMachine::Synchrony::TCPSocket  do
     end
     context 'when we closed the connection' do
       it 'raises IOError' do
-        EventMachine.synchrony do
-          EM::start_server('localhost', 12345, SendAndKeepOpen)
-          @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
-          @socket.close
+        tcp_test(SendAndKeepOpen, :close => true) do
           proc {
             @socket.send("foo",0)
           }.should raise_error(IOError)
-          EM.stop
         end
       end
     end
     context 'without a flags argument' do
       it 'raises ArgumentError' do
-        EventMachine.synchrony do
-          EM::start_server('localhost', 12345, SendAndKeepOpen)
-          @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+        tcp_test(SendAndKeepOpen) do
           proc {
             @socket.send('foo')
           }.should raise_error(ArgumentError)
-          EM.stop
         end
       end
     end
