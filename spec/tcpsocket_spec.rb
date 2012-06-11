@@ -10,7 +10,7 @@ end
 module SendAndTimedClose
   def post_init
     send_data "1234"
-    EM.add_timer(2) { self.close_connection_after_writing }
+    EM.add_timer(0.05) { self.close_connection_after_writing }
   end
 end
 
@@ -116,7 +116,7 @@ describe EventMachine::Synchrony::TCPSocket  do
                 EM::start_server('localhost', 12345, SendAndKeepOpen)
                 @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
                 @blocked = true
-                EM.add_timer(1) { @blocked.should eq true;  EM.next_tick { EM.stop } }
+                EM.next_tick { @blocked.should eq true;  EM.next_tick { EM.stop } }
                 @socket.read(10)
                 @blocked = false
               end
@@ -225,7 +225,7 @@ describe EventMachine::Synchrony::TCPSocket  do
             EM::start_server('localhost', 12345, SendAndTimedClose)
             @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
             @blocked = true
-            EM.add_timer(1) { @blocked.should eq true }
+            EM.next_tick { @blocked.should eq true }
             @socket.read(10).should eq '1234'
             @blocked = false
             EM.stop
@@ -303,7 +303,7 @@ describe EventMachine::Synchrony::TCPSocket  do
                 @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
                 @socket.recv(10)
                 @blocked = true
-                EM.add_timer(1) { @blocked.should eq true;  EM.next_tick { EM.stop } }
+                EM.next_tick { @blocked.should eq true;  EM.next_tick { EM.stop } }
                 @socket.recv(10)
                 @blocked = false
               end
@@ -425,7 +425,7 @@ describe EventMachine::Synchrony::TCPSocket  do
         EventMachine.synchrony do
           EM::start_server('localhost', 12345, SendAndClose)
           @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
-          EM.add_timer(0.1) do
+          EM.add_timer(0.01) do
             proc {
               @socket.write("foo")
             }.should raise_error(Errno::EPIPE)
@@ -455,7 +455,7 @@ describe EventMachine::Synchrony::TCPSocket  do
         EventMachine.synchrony do
           EM::start_server('localhost', 12345, SendAndClose)
           @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
-          EM.add_timer(0.1) do
+          EM.add_timer(0.01) do
             proc {
               @socket.send("foo",0)
             }.should raise_error(Errno::EPIPE)
