@@ -28,6 +28,17 @@ module EventMachine
     self.run(context, tail)
   end
 
+  # A fast method for the case in which we know EM is already running.
+  # In case a block is given it avoids the need of converting it into
+  # a Proc object, and avoids calling to EM.run (which is a long method).
+  def self.fast_synchrony(blk=nil)
+    if block_given?
+      self.next_tick { Fiber.new { yield }.resume }
+    else
+      self.next_tick { Fiber.new { blk.call }.resume }
+    end
+  end
+
   module Synchrony
 
     # sync is a close relative to inlineCallbacks from Twisted (Python)
