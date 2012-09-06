@@ -169,6 +169,20 @@ ActiveRecord::Base.establish_connection(
 result = Widget.all.to_a
 ```
 
+## Faster method (if EventMachine is running)
+
+The EM.fast_synchrony method behaves similar to EM.synchrony but it does not internally call to EM.run but EM.next_tick (so EM must be running). It also avoids converting a given block into a Proc. This is a faster method in case more efficiency  is needed.
+
+```ruby
+require "em-synchrony"
+
+EM.run do
+  EM.fast_synchrony do
+    [...]
+  end
+end
+```
+
 # License
 
 The MIT License - Copyright (c) 2011 Ilya Grigorik
