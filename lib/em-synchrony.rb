@@ -122,3 +122,6 @@ module EventMachine
     end
   end
 end
+
+# Alias for {EventMachine::Synchrony}
+EM::S = EventMachine::Synchrony
