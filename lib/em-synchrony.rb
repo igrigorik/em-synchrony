@@ -106,6 +106,14 @@ module EventMachine
       EM.defer(op || blk, lambda{ |result| fiber.resume(result) })
       Fiber.yield
     end
+    
+    # Fiber-aware EM.system
+    #
+    def self.system cmd, *args
+      fiber = Fiber.current
+      EM.system(cmd, *args){ |out, status| fiber.resume( [out, status] ) }
+      Fiber.yield
+    end
 
     # Routes to EM::Synchrony::Keyboard
     #
