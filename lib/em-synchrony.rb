@@ -18,14 +18,29 @@ require "em-synchrony/iterator"  if EventMachine::VERSION > '0.12.10'
 
 module EventMachine
 
-  # A convenience method for wrapping EM.run body within
+  # A convenience method for wrapping a given block within
   # a Ruby Fiber such that async operations can be transparently
   # paused and resumed based on IO scheduling.
-  def self.synchrony(blk=nil, tail=nil, &block)
-    blk ||= block
-    context = Proc.new { Fiber.new { blk.call }.resume }
+  # It detects whether EM is running or not.
+  def self.synchrony(blk=nil, tail=nil)
+    # EM already running.
+    if reactor_running?
+      if block_given?
+        Fiber.new { yield }.resume
+      else
+        Fiber.new { blk.call }.resume
+      end
+      tail && add_shutdown_hook(tail)
 
-    self.run(context, tail)
+    # EM not running.
+    else
+      if block_given?
+        run(nil, tail) { Fiber.new { yield }.resume }
+      else
+        run(Proc.new { Fiber.new { blk.call }.resume }, tail)
+      end
+
+    end
   end
 
   module Synchrony
