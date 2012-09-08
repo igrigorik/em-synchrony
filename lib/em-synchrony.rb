@@ -98,6 +98,22 @@ module EventMachine
     def self.next_tick(&blk)
       EM.next_tick { Fiber.new { blk.call }.resume }
     end
+    
+    # Fiber-aware EM.defer 
+    #            
+    def self.defer op = nil, &blk
+      fiber = Fiber.current
+      EM.defer(op || blk, lambda{ |result| fiber.resume(result) })
+      Fiber.yield
+    end
+    
+    # Fiber-aware EM.system
+    #
+    def self.system cmd, *args
+      fiber = Fiber.current
+      EM.system(cmd, *args){ |out, status| fiber.resume( [out, status] ) }
+      Fiber.yield
+    end
 
     # Routes to EM::Synchrony::Keyboard
     #

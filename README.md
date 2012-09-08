@@ -8,7 +8,7 @@ Collection of convenience classes and primitives to help untangle evented code, 
  * Fiber aware Multi-request interface for any callback enabled clients
  * Fiber aware TCPSocket replacement, powered by EventMachine
  * Fiber aware Thread, Mutex, ConditionVariable clases
- * Fiber aware sleep
+ * Fiber aware sleep, defer, system
 
 Supported clients:
 
