@@ -6,7 +6,7 @@ end
 
 module EventMachine
   module HTTPMethods
-     %w[get head post delete put].each do |type|
+     %w[get head post delete put patch options].each do |type|
        class_eval %[
          alias :a#{type} :#{type}
          def #{type}(options = {}, &blk)
@@ -16,7 +16,7 @@ module EventMachine
            if conn.error.nil?
              conn.callback { f.resume(conn) }
              conn.errback  { f.resume(conn) }
-             
+
              Fiber.yield
            else
              conn
