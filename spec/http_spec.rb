@@ -28,9 +28,11 @@ describe EventMachine::HttpRequest do
       order.push :head if EventMachine::HttpRequest.new(URL).head
       order.push :post if EventMachine::HttpRequest.new(URL).delete
       order.push :put  if EventMachine::HttpRequest.new(URL).put
+      order.push :options if EventMachine::HttpRequest.new(URL).options
+      order.push :patch  if EventMachine::HttpRequest.new(URL).patch
 
       (now - start.to_f).should be_within(DELAY * order.size * 0.15).of(DELAY * order.size)
-      order.should == [:get, :post, :head, :post, :put]
+      order.should == [:get, :post, :head, :post, :put, :options, :patch]
 
       s.stop
       EventMachine.stop
@@ -49,10 +51,12 @@ describe EventMachine::HttpRequest do
       multi.add :c, EventMachine::HttpRequest.new(URL).ahead
       multi.add :d, EventMachine::HttpRequest.new(URL).adelete
       multi.add :e, EventMachine::HttpRequest.new(URL).aput
+      multi.add :f, EventMachine::HttpRequest.new(URL).aoptions
+      multi.add :g, EventMachine::HttpRequest.new(URL).apatch
       res = multi.perform
 
       (now - start.to_f).should be_within(DELAY * 0.15).of(DELAY)
-      res.responses[:callback].size.should == 5
+      res.responses[:callback].size.should == 7
       res.responses[:errback].size.should == 0
 
       s.stop
