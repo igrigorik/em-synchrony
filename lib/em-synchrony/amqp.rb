@@ -143,9 +143,9 @@ module EventMachine
         end
 
         alias :asubscribe :subscribe
-        def subscribe &block
+        def subscribe(opts = {}, &block)
           Fiber.new do
-            asubscribe(&EM::Synchrony::AMQP.sync_cb(Fiber.current))
+            asubscribe(opts, &EM::Synchrony::AMQP.sync_cb(Fiber.current))
             loop { block.call(Fiber.yield) }
           end.resume
         end
