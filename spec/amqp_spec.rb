@@ -83,7 +83,7 @@ describe EM::Synchrony::AMQP do
       nb_q1, nb_q2 = 0, 0
       stop_cb = proc { EM.stop if nb_q1 + nb_q2 == 2 * nb_msg }
 
-      q1.subscribe do |meta, msg|
+      q1.subscribe(:ack => false) do |meta, msg|
         msg.should match(/^Bonjour [0-9]+/)
         nb_q1 += 1
         stop_cb.call
