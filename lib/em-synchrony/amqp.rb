@@ -116,9 +116,21 @@ module EventMachine
       class Exchange < ::AMQP::Exchange
         def initialize(channel, type, name, opts = {}, &block)
           f = Fiber.current
-          super(channel, type, name, opts, &EM::Synchrony::AMQP.sync_cb(f))
-          exchange, declare_ok = Fiber.yield
-          raise Error.new unless declare_ok.is_a?(::AMQ::Protocol::Exchange::DeclareOk)
+
+          # AMQP Exchange constructor handles certain special exchanges differently.
+          # The callback passed in isn't called when the response comes back
+          # but is called immediately on the original calling fiber. That means that
+          # when the sync_cb callback yields the fiber when called, it will hang and never
+          # be resumed.  So handle these exchanges without yielding
+          if name == "amq.#{type}" or name.empty? or opts[:no_declare]
+            exchange = nil
+            super(channel, type, name, opts) { |ex| exchange = ex }
+          else
+            super(channel, type, name, opts, &EM::Synchrony::AMQP.sync_cb(f))
+            exchange, declare_ok = Fiber.yield
+            raise Error.new(declare_ok.to_s) unless declare_ok.is_a?(::AMQ::Protocol::Exchange::DeclareOk)
+          end
+
           exchange
         end
 
