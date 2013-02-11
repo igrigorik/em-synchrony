@@ -85,7 +85,13 @@ module EventMachine
       def read(num_bytes = nil, dest = nil)
         handle_read(:read, num_bytes, dest)
       end
-      alias_method :read_nonblock, :read
+
+      def read_nonblock(maxlen, dest = nil)
+        raise ArgumentError, "maxlen must be > 0" if !maxlen || maxlen <= 0
+        read_bytes = handle_read(:read_nonblock, maxlen, dest)
+        raise EOFError if read_bytes.nil?
+        read_bytes
+      end
 
       def recv(num_bytes, flags = 0)
         raise "Unknown flags in recv(): #{flags}" if flags.nonzero?
@@ -159,11 +165,14 @@ module EventMachine
         end
         
         def try_read_data
-          if @read_type == :read
+          if @read_type == :read || @read_type == :read_nonblock
+            nonblocking = @read_type == :read_nonblock
             unless @remote_closed
               if @read_bytes
                 # read(n) on an open socket, with >= than n buffered data, returns n data
-                if @in_buff.size >= @read_bytes then @in_buff.slice!(0, @read_bytes)
+                if (@in_buff.size >= @read_bytes ||
+                    (nonblocking && @in_buff.size > 0)) then
+                  @in_buff.slice!(0, @read_bytes)
                 # read(n) on an open socket, with < than n buffered data, blocks
                 else :block end
               else

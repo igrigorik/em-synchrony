@@ -1,4 +1,4 @@
-require "spec/helper/all"
+require "spec/helper/core"
 
 module SendAndClose
   def post_init
@@ -21,15 +21,13 @@ module SendAndKeepOpen
 end
 
 def tcp_test(server_type, ops={}, &block)
-  Proc.new do
-    EventMachine.synchrony do
-      ops = {:stop => true}.merge ops
-      EM::start_server('localhost', 12345, server_type)
-      @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
-      @socket.close if ops[:close]
-      block.call
-      EM.stop if ops[:stop]
-    end
+  EventMachine.synchrony do
+    ops = {:stop => true}.merge ops
+    EM::start_server('localhost', 12345, server_type)
+    @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+    @socket.close if ops[:close]
+    block.call
+    EM.stop if ops[:stop]
   end
 end
 
@@ -231,6 +229,82 @@ describe EventMachine::Synchrony::TCPSocket  do
     end
   end
   
+  context '#read_nonblock' do
+    context 'with a positive length argument' do
+      context 'when the connection is open' do
+        context 'with greater or equal than the requested data buffered' do
+          it 'returns the requested data and no more' do
+            tcp_test(SendAndKeepOpen) do
+              @socket.read_nonblock(2).size.should eq 2
+              @socket.read_nonblock(1).size.should eq 1
+            end
+          end
+        end
+        context 'with less than the requested data buffered' do
+          it 'returns the available data' do
+            tcp_test(SendAndKeepOpen) do
+              @socket.read_nonblock(10).size.should eq 4
+            end
+          end
+        end
+      end
+      context 'when the peer has closed the connection' do
+        context 'with no data buffered' do
+          it 'raises EOFError' do
+            tcp_test(SendAndClose) do
+              @socket.read_nonblock(4).size.should eq 4
+              lambda {
+                @socket.read_nonblock(1)
+              }.should raise_error(EOFError)
+            end
+          end
+        end
+        context 'with less than the requested data buffered' do
+          it 'returns the buffered data' do
+            tcp_test(SendAndClose) do
+              @socket.read_nonblock(50).size.should eq 4
+            end
+          end
+        end
+        context 'with greater or equal than the requested data buffered' do
+          it 'returns the requested data and no more' do
+            tcp_test(SendAndClose) do
+              @socket = EventMachine::Synchrony::TCPSocket.new 'localhost', 12345
+              @socket.read_nonblock(2).size.should eq 2
+            end
+          end
+        end
+      end
+      context 'when we closed the connection' do
+        it 'raises IOError' do
+          tcp_test(SendAndKeepOpen, :close => true) do
+            proc {
+              @socket.read_nonblock(4)
+            }.should raise_error(IOError)
+          end
+        end
+      end
+    end
+    context 'with a negative length argument' do
+      it 'raises ArgumentError' do
+        tcp_test(SendAndKeepOpen) do
+          proc {
+            @socket.read_nonblock(-10)
+          }.should raise_error(ArgumentError)
+        end
+      end
+    end
+    context 'with a zero length argument' do
+      it 'raises ArgumentError' do
+        tcp_test(SendAndKeepOpen) do
+          proc {
+            @socket.read_nonblock(0)
+          }.should raise_error(ArgumentError)
+        end
+      end
+    end
+  end
+
   context '#recv' do
     context 'with a length argument' do
       context 'with a possitive length argument' do
