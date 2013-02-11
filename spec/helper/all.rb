@@ -1,9 +1,4 @@
-require 'rubygems'
-require 'rspec'
-require 'pp'
-
-require 'lib/em-synchrony'
-require 'lib/em-synchrony/em-http'
+require 'spec/helper/core'
 require 'lib/em-synchrony/mysql2'
 require 'lib/em-synchrony/em-remcached'
 require 'lib/em-synchrony/em-memcache'
