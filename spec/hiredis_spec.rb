@@ -60,4 +60,12 @@ describe EM::Hiredis do
       EM.stop
     end
   end
+
+  it "should offer client accessor" do
+    EventMachine.synchrony do
+      redis = EM::Hiredis::Client.connect
+      redis.client.should == redis
+      EM.stop
+    end
+  end
 end

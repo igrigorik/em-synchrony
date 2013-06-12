@@ -47,8 +47,8 @@ module EventMachine
             auth(@password) if @password
             select(@db) if @db
 
-            @subs.each { |s| method_missing(:subscribe, s) }
-            @psubs.each { |s| method_missing(:psubscribe, s) }
+            @subs.each { |s| method_missing(:subscribe, s) } if @subs
+            @psubs.each { |s| method_missing(:psubscribe, s) } if @psubs
             succeed
 
             if @reconnecting
@@ -64,7 +64,7 @@ module EventMachine
             deferred = @defs.shift
             deferred.fail(reply) if deferred
           else
-            if reply && PUBSUB_MESSAGES.include?(reply[0]) # reply can be nil
+            if reply && EventMachine::Hiredis::PubsubClient::PUBSUB_MESSAGES.include?(reply[0]) # reply can be nil
               kind, subscription, d1, d2 = *reply
 
               case kind.to_sym
@@ -92,6 +92,10 @@ module EventMachine
         @reconnecting = false
 
         return self
+      end
+
+      def client
+        self
       end
 
       alias :old_method_missing :method_missing
