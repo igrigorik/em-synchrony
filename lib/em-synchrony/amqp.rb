@@ -22,7 +22,7 @@ module EventMachine
             if fiber == Fiber.current
               return *args
             else
-              fiber.resume *args
+              fiber.resume(*args)
             end
           end
         end
