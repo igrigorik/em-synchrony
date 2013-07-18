@@ -54,15 +54,13 @@ describe EM::Synchrony::AMQP do
       exchange = EM::Synchrony::AMQP::Exchange.new(channel, :fanout, "test.em-synchrony.exchange")
       exchange.should be_kind_of(EventMachine::Synchrony::AMQP::Exchange)
 
-      direct = channel.direct("test.em-synchrony.direct")
-      fanout = channel.fanout("test.em-synchrony.fanout")
-      topic = channel.topic("test.em-synchrony.topic")
-      headers = channel.headers("test.em-synchrony.headers")
+      [:direct, :fanout, :topic, :headers].each do |type|
+        # Exercise cached exchange code path
+        2.times.map { channel.send(type, "test.em-synchrony.#{type}") }.each do |ex|
+          ex.should be_kind_of(EventMachine::Synchrony::AMQP::Exchange)
+        end
+      end
 
-      direct.should be_kind_of(EventMachine::Synchrony::AMQP::Exchange)
-      fanout.should be_kind_of(EventMachine::Synchrony::AMQP::Exchange)
-      topic.should be_kind_of(EventMachine::Synchrony::AMQP::Exchange)
-      headers.should be_kind_of(EventMachine::Synchrony::AMQP::Exchange)
       EM.stop
     end
   end

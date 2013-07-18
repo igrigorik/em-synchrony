@@ -54,7 +54,7 @@ module EventMachine
             def #{type}(name = 'amq.#{type}', opts = {})
               if exchange = find_exchange(name)
                 extended_opts = Exchange.add_default_options(:#{type}, name, opts, nil)
-                validate_parameters_match!(exchange, extended_opts)
+                validate_parameters_match!(exchange, extended_opts, :exchange)
                 exchange
               else
                 register_exchange(Exchange.new(self, :#{type}, name, opts))
