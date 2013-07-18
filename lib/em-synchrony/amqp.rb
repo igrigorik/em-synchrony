@@ -1,7 +1,7 @@
 begin
   require "amqp"
   require "amq/protocol"
-rescue LoadError => error
+rescue LoadError
   raise "Missing EM-Synchrony dependency: gem install amqp"
 end
 
