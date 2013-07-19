@@ -1,7 +1,7 @@
 begin
   require "amqp"
   require "amq/protocol"
-rescue LoadError => error
+rescue LoadError
   raise "Missing EM-Synchrony dependency: gem install amqp"
 end
 
@@ -22,7 +22,7 @@ module EventMachine
             if fiber == Fiber.current
               return *args
             else
-              fiber.resume *args
+              fiber.resume(*args)
             end
           end
         end
@@ -54,7 +54,7 @@ module EventMachine
             def #{type}(name = 'amq.#{type}', opts = {})
               if exchange = find_exchange(name)
                 extended_opts = Exchange.add_default_options(:#{type}, name, opts, nil)
-                validate_parameters_match!(exchange, extended_opts)
+                validate_parameters_match!(exchange, extended_opts, :exchange)
                 exchange
               else
                 register_exchange(Exchange.new(self, :#{type}, name, opts))
