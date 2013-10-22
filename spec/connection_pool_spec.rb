@@ -126,4 +126,49 @@ describe EventMachine::Synchrony::ConnectionPool do
     end
   end
 
+  describe '#pool_status' do
+    it 'should return right initial size' do
+      (1..10).each do |count|
+        pool = EventMachine::Synchrony::ConnectionPool.new(size: count) { }
+        status = pool.pool_status
+        expect(status).to include available: count
+        expect(status).to include reserved: 0
+        expect(status).to include pending: 0
+      end
+    end
+    it 'should return up-to-date statusrmation' do
+      sleep = 0.5
+      count = 5
+      EM.run do
+        pool = EM::Synchrony::ConnectionPool.new(size: count) do
+          -> { EM::Synchrony.sleep(sleep) }
+        end
+        (1..count).each do |used|
+          Fiber.new { pool.call }.resume
+          status = pool.pool_status
+          expect(status).to include available: count - used
+          expect(status).to include reserved: used
+          expect(status).to include pending: 0
+        end
+        (1..count).each do |used|
+          Fiber.new { pool.call }.resume
+          status = pool.pool_status
+          expect(status).to include available: 0
+          expect(status).to include reserved: count
+          expect(status).to include pending: used
+        end
+        Fiber.new {
+          EM::Synchrony.sleep(sleep + 0.1)
+          expect(pool.pool_status).to include pending: 0
+
+          EM::Synchrony.sleep(sleep + 0.1)
+          status = pool.pool_status
+          expect(status).to include available: count
+          expect(status).to include reserved: 0
+          expect(status).to include pending: 0
+          EM.stop
+        }.resume
+      end
+    end
+  end
 end

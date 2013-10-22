@@ -27,6 +27,17 @@ module EventMachine
           release(f) if not async
         end
       end
+      
+      # Returns current pool utilization.
+      #
+      # @return [Hash] Current utilization.
+      def pool_status
+        {
+          available: @available.size,
+          reserved: @reserved.size,
+          pending: @pending.size
+        }
+      end
 
       private
 
