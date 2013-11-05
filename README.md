@@ -169,6 +169,31 @@ ActiveRecord::Base.establish_connection(
 result = Widget.all.to_a
 ```
 
+## Hooks
+
+em-synchrony already provides fiber-aware calls for sleep, system and defer. When mixing fiber-aware code with other gems, these might use non-fiber-aware versions which result in unexpected behavior: calling `sleep` would pause the whole reactor instead of
+a single fiber. For that reason, hooks into the Kernel are provided to override the default behavior to e.g. add logging or redirect these calls their fiber-aware versions.
+
+```ruby
+# Adding logging but still executes the actual sleep
+require "em-synchrony"
+log = Logger.new(STDOUT)
+EM::Synchrony.on_sleep do |*args|
+  log.warn "Kernel.sleep called by:"
+  caller.each { |line| log.warn line }
+  sleep(*args) # Calls the actual sleep
+end
+```
+
+```ruby
+# Redirects to EM::Synchrony.sleep
+require "em-synchrony"
+log = Logger.new(STDOUT)
+EM::Synchrony.on_sleep do |*args|
+  EM::Synchrony.sleep(*args)
+end
+```
+
 # License
 
 The MIT License - Copyright (c) 2011 Ilya Grigorik
