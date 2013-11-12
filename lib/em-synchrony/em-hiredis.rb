@@ -13,6 +13,16 @@ module EventMachine
       client
     end
     
+    class Client
+      def pubsub
+        return @pubsub if @pubsub
+
+        client = PubsubClient.new(@host, @port, @password, @db)
+        EM::Synchrony.sync client.connect
+        @pubsub = client
+      end
+    end
+    
     class BaseClient
       def self.connect(host = 'localhost', port = 6379)
         conn = new(host, port)
