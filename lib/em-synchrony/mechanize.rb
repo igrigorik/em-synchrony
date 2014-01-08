@@ -3,7 +3,7 @@ require 'mechanize'
 module EventMachine
   module Synchrony
     class Mechanize < ::Mechanize
-      def initialize
+      def initialize(*args, &blk)
         super
         @agent.instance_variable_get(:@http).singleton_class.send(:include, DeferedNetHttpPersistentRequest)
       end
