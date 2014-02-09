@@ -135,5 +135,13 @@ module EventMachine
     def self.gets
       EventMachine::Synchrony::Keyboard.new.gets
     end
+
+    # Interrupt current fiber to give chance to other fibers
+    #
+    def self.interrupt
+      fiber = Fiber.current
+      EM.next_tick { fiber.resume }
+      Fiber.yield
+    end
   end
 end
