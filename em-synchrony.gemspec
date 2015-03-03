@@ -12,8 +12,6 @@ Gem::Specification.new do |s|
   s.summary     = %q{Fiber aware EventMachine libraries}
   s.description = s.summary
 
-  s.rubyforge_project = "em-synchrony"
-
   s.add_runtime_dependency("eventmachine", ">= 1.0.0.beta.1")
 
   s.files         = `git ls-files`.split("\n")
