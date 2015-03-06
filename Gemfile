@@ -8,7 +8,7 @@ group :development do
   gem 'em-http-request', :git => 'git://github.com/igrigorik/em-http-request'
   gem 'remcached'
   # gem 'em-mongo', :git => 'https://github.com/bcg/em-mongo.git'
-  gem 'activerecord', '>= 3.1.0.rc6'
+  gem 'activerecord', '= 4.1.8'
   gem 'em-mongo'
   gem 'bson_ext'
   gem 'mysql2'
