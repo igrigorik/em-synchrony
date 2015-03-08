@@ -15,5 +15,5 @@ group :development do
   gem 'em-redis', '~> 0.3.0'
   gem 'em-hiredis'
   gem 'mongo'
-  gem 'amqp'
+  gem 'amqp', '= 1.0.0'
 end
