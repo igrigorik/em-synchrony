@@ -6,7 +6,7 @@ describe Memcached do
   it "should yield until connection is ready" do
     EventMachine.synchrony do
       Memcached.connect %w(localhost)
-      Memcached.usable?.should be_true
+      Memcached.usable?.should eq(true)
       EventMachine.stop
     end
   end

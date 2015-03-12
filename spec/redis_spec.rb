@@ -5,7 +5,7 @@ describe EM::Protocols::Redis do
   it "should yield until connection is ready" do
     EventMachine.synchrony do
       connection = EM::Protocols::Redis.connect
-      connection.connected.should be_true
+      connection.connected.should eq(true)
 
       EventMachine.stop
     end

@@ -5,7 +5,7 @@ describe EM::Hiredis do
   it "should yield until connection is ready" do
     EventMachine.synchrony do
       connection = EM::Hiredis::Client.connect
-      connection.connected.should be_true
+      connection.connected.should eq(true)
 
       EventMachine.stop
     end
