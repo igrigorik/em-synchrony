@@ -90,7 +90,7 @@ describe EM::Protocols::Redis do
     end
   end
 
-  it "should execute sync add and auth" do
+  it "should execute sync add and auth", ci_skip: true do
     EventMachine.synchrony do
       redis = EM::Protocols::Redis.connect
       redis.auth('abc')
