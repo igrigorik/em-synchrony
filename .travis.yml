@@ -8,6 +8,9 @@ services:
   - memcached
   - redis-server
 
+before_script:
+  - mysql < spec/widgets.sql
+
 matrix:
   include:
     - env: "activerecord=3.2.21"
