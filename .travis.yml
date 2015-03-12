@@ -3,6 +3,7 @@ rvm:
 
 services:
   - mysql
+  - rabbitmq
 
 matrix:
   include:
