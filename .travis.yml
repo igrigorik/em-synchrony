@@ -1,6 +1,8 @@
 rvm:
   - 1.9.3
 
+sudo: false
+
 services:
   - mysql
   - rabbitmq
