@@ -14,7 +14,7 @@ describe EM::Synchrony::AMQP do
     EM.synchrony do
       connection = EM::Synchrony::AMQP.connect
       connection.disconnect
-      connection.connected?.should be_false
+      connection.connected?.should eq(false)
       EM.stop
     end
   end
