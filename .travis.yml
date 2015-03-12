@@ -4,6 +4,9 @@ rvm:
 services:
   - mysql
   - rabbitmq
+  - mongodb
+  - memcached
+  - redis-server
 
 matrix:
   include:
