@@ -6,7 +6,6 @@ services:
 
 matrix:
   include:
-    - script: "bundle exec rspec"
     - env: "activerecord=3.2.21"
       script: "bundle exec rspec spec/activerecord_spec.rb"
     - env: "activerecord=4.0.9"
