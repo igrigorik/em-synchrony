@@ -28,9 +28,9 @@ describe Memcached do
   end
 
   it "should fire multi memcached requests" do
-    EventMachine.synchrony do
-      pending "patch mult-get"
+    skip "patch mult-get"
 
+    EventMachine.synchrony do
       Memcached.connect %w(localhost)
       Memcached.multi_get([{:key => 'foo'},{:key => 'bar'}, {:key => 'test'}]) do |res|
         # TODO
