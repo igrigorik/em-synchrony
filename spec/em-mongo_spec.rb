@@ -233,7 +233,7 @@ describe EM::Mongo do
 
   context "authentication" do
     # these specs only get asserted if you run mongod with the --auth flag
-    it "successfully authenticates" do
+    it "successfully authenticates", ci_skip: true do
       # For this spec you will need to add this user to the database
       #
       # From the Mongo shell:
