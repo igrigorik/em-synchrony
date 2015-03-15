@@ -4,7 +4,7 @@ gem 'eventmachine', :git => 'git://github.com/eventmachine/eventmachine.git'
 
 group :development do
   gem 'rake'
-  gem 'rspec'
+  gem 'rspec', '~> 3.2'
   gem 'em-http-request', :git => 'git://github.com/igrigorik/em-http-request'
   gem 'remcached'
   # gem 'em-mongo', :git => 'https://github.com/bcg/em-mongo.git'
