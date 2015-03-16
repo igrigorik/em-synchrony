@@ -2,6 +2,7 @@
 
 [![Gem Version](https://badge.fury.io/rb/em-synchrony.png)](http://rubygems.org/gems/em-synchrony)
 [![Analytics](https://ga-beacon.appspot.com/UA-71196-10/em-synchrony/readme)](https://github.com/igrigorik/ga-beacon)
+[![Build Status](https://travis-ci.org/igrigorik/em-synchrony.svg?branch=master)](https://travis-ci.org/igrigorik/em-synchrony)
 
 Collection of convenience classes and primitives to help untangle evented code, plus a number of patched EM clients to make them Fiber aware. To learn more, please see: [Untangling Evented Code with Ruby Fibers](http://www.igvita.com/2010/03/22/untangling-evented-code-with-ruby-fibers).
 
