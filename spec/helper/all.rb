@@ -14,4 +14,6 @@ def now(); Time.now.to_f; end
 
 RSpec.configure do |config|
   config.include(Sander6::CustomMatchers)
+
+  config.filter_run_excluding ci_skip: true if ENV['CI']
 end

@@ -1,14 +1,14 @@
-source :gemcutter
+source 'https://rubygems.org'
 
 gem 'eventmachine', :git => 'git://github.com/eventmachine/eventmachine.git'
 
 group :development do
   gem 'rake'
-  gem 'rspec'
+  gem 'rspec', '~> 3.2'
   gem 'em-http-request', :git => 'git://github.com/igrigorik/em-http-request'
   gem 'remcached'
   # gem 'em-mongo', :git => 'https://github.com/bcg/em-mongo.git'
-  gem 'activerecord', '= 4.1.8'
+  gem 'activerecord', "= #{ENV['activerecord'] || '4.1.8'}"
   gem 'em-mongo'
   gem 'bson_ext'
   gem 'mysql2'

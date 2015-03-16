@@ -1,0 +1,28 @@
+language: ruby
+
+rvm:
+  - 1.9.3
+
+sudo: false
+
+services:
+  - mysql
+  - rabbitmq
+  - mongodb
+  - memcached
+  - redis-server
+
+before_script:
+  - mysql < spec/widgets.sql
+
+matrix:
+  include:
+    - env: "activerecord=3.2.21"
+      script: "bundle exec rspec spec/activerecord_spec.rb"
+    - env: "activerecord=4.0.9"
+      script: "bundle exec rspec spec/activerecord_spec.rb"
+    - env: "activerecord=4.2.0"
+      script: "bundle exec rspec spec/activerecord_spec.rb"
+  allow_failures:
+    - env: "activerecord=3.2.21"
+    - env: "activerecord=4.2.0"

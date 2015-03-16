@@ -2,13 +2,7 @@ require "spec/helper/all"
 require "em-synchrony/activerecord"
 require "em-synchrony/fiber_iterator"
 
-# create database widgets;
-# use widgets;
-# create table widgets (
-# id INT NOT NULL AUTO_INCREMENT,
-# title varchar(255),
-# PRIMARY KEY (`id`)
-# );
+# mysql < spec/widgets.sql
 
 class Widget < ActiveRecord::Base; end;
 

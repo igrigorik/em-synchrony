@@ -4,10 +4,10 @@ describe EM::Mongo do
   it "should yield until connection is ready" do
     EventMachine.synchrony do
       connection = EM::Mongo::Connection.new
-      connection.connected?.should be_true
+      connection.connected?.should eq(true)
 
       db = connection.db('db')
-      db.is_a?(EventMachine::Mongo::Database).should be_true
+      db.is_a?(EventMachine::Mongo::Database).should eq(true)
 
       EventMachine.stop
     end
@@ -45,7 +45,7 @@ describe EM::Mongo do
         obj2.size.should == 1
 
         obj3 = collection.first
-        obj3.is_a?(Hash).should be_true
+        obj3.is_a?(Hash).should eq(true)
 
         EventMachine.stop
       end
@@ -114,7 +114,7 @@ describe EM::Mongo do
             obj2.size.should == 1
           end
           collection.afirst.callback do |obj3|
-            obj3.is_a?(Hash).should be_true
+            obj3.is_a?(Hash).should eq(true)
             obj3['hello'].should == 'world'
             EM.next_tick{ EventMachine.stop }
           end
@@ -181,7 +181,7 @@ describe EM::Mongo do
             obj2.size.should == 1
           end
           collection.afirst do |obj3|
-            obj3.is_a?(Hash).should be_true
+            obj3.is_a?(Hash).should eq(true)
             obj3['hello'].should == 'world'
             EM.next_tick{ EventMachine.stop }
           end
@@ -233,7 +233,7 @@ describe EM::Mongo do
 
   context "authentication" do
     # these specs only get asserted if you run mongod with the --auth flag
-    it "successfully authenticates" do
+    it "successfully authenticates", ci_skip: true do
       # For this spec you will need to add this user to the database
       #
       # From the Mongo shell:

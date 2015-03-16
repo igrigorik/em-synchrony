@@ -5,7 +5,7 @@ describe EM::Protocols::Redis do
   it "should yield until connection is ready" do
     EventMachine.synchrony do
       connection = EM::Protocols::Redis.connect
-      connection.connected.should be_true
+      connection.connected.should eq(true)
 
       EventMachine.stop
     end
@@ -90,7 +90,7 @@ describe EM::Protocols::Redis do
     end
   end
 
-  it "should execute sync add and auth" do
+  it "should execute sync add and auth", ci_skip: true do
     EventMachine.synchrony do
       redis = EM::Protocols::Redis.connect
       redis.auth('abc')

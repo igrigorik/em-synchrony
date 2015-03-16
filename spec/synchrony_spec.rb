@@ -19,14 +19,23 @@ describe EM::Synchrony do
 
   describe "#next_tick" do
     it "should wrap next_tick into a Fiber context" do
-      Fiber.new {
-        df = EM::DefaultDeferrable.new
+      EM.synchrony {
+        begin
+          fired = false
+          f = Fiber.current
 
-        EM::Synchrony.next_tick do
-          df.succeed args
-          EM::Synchrony.sync(df).should == args
+          EM::Synchrony.next_tick do
+            fired = true
+            Fiber.current.should_not eq(f)
+          end
+
+          EM::Synchrony.interrupt
+
+          fired.should eq(true)
+        ensure
+          EM.stop
         end
-      }.resume
+      }
     end
   end
 

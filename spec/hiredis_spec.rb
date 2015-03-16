@@ -2,10 +2,13 @@ require "spec/helper/all"
 
 describe EM::Hiredis do
 
-  it "should yield until connection is ready" do
+  it "should connect on demand" do
     EventMachine.synchrony do
       connection = EM::Hiredis::Client.connect
-      connection.connected.should be_true
+      connection.should_not be_connected
+
+      connection.ping
+      connection.should be_connected
 
       EventMachine.stop
     end
