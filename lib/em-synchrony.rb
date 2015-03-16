@@ -10,6 +10,7 @@ end
 
 require "em-synchrony/core_ext"
 require "em-synchrony/thread"
+require "em-synchrony/monitor_mixin"
 require "em-synchrony/em-multi"
 require "em-synchrony/tcpsocket"
 require "em-synchrony/connection_pool"

@@ -12,36 +12,34 @@ require 'active_record/connection_adapters/mysql2_adapter'
 module ActiveRecord
   class Base
     def self.em_mysql2_connection(config)
-      client = EM::Synchrony::ActiveRecord::ConnectionPool.new(size: config[:pool]) do
-        conn = ActiveRecord::ConnectionAdapters::EMMysql2Adapter::Client.new(config.symbolize_keys)
-        # From Mysql2Adapter#configure_connection
-        conn.query_options.merge!(:as => :array)
+      config[:username] = 'root' if config[:username].nil?
 
-        # By default, MySQL 'where id is null' selects the last inserted id.
-        # Turn this off. http://dev.rubyonrails.org/ticket/6778
-        variable_assignments = ['SQL_AUTO_IS_NULL=0']
-        encoding = config[:encoding]
-        variable_assignments << "NAMES '#{encoding}'" if encoding
+      if Mysql2::Client.const_defined? :FOUND_ROWS
+        config[:flags] = Mysql2::Client::FOUND_ROWS
+      end
 
-        wait_timeout = config[:wait_timeout]
-        wait_timeout = 2592000 unless wait_timeout.is_a?(Fixnum)
-        variable_assignments << "@@wait_timeout = #{wait_timeout}"
-
-        conn.query("SET #{variable_assignments.join(', ')}")
-        conn
-      end 
+      client = Mysql2::EM::Client.new(config.symbolize_keys)
       options = [config[:host], config[:username], config[:password], config[:database], config[:port], config[:socket], 0]
-      ActiveRecord::ConnectionAdapters::EMMysql2Adapter.new(client, logger, options, config)
+      ConnectionAdapters::EmMysql2Adapter.new(client, logger, options, config)
     end
   end
 
   module ConnectionAdapters
-    class EMMysql2Adapter < ::ActiveRecord::ConnectionAdapters::Mysql2Adapter
-      class Client < Mysql2::EM::Client
-        include EM::Synchrony::ActiveRecord::Client
+    class EmMysql2Adapter < Mysql2Adapter
+      ADAPTER_NAME = 'EmMySql2'
+
+      class Column < AbstractMysqlAdapter::Column # :nodoc:
+        def adapter
+          EmMysql2Adapter
+        end
       end
 
-      include EM::Synchrony::ActiveRecord::Adapter
+      private
+
+      def connect
+        @connection = Mysql2::EM::Client.new(@config)
+        configure_connection
+      end
     end
   end
 end
