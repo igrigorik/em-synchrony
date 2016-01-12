@@ -9,15 +9,24 @@ class Widget < ActiveRecord::Base; end;
 describe "Fiberized ActiveRecord driver for mysql2" do
   DELAY = 0.25
   QUERY = "SELECT sleep(#{DELAY})"
+  LOGGER = Logger.new(STDOUT).tap do |logger|
+    logger.formatter = proc do |_severity, datetime, _progname, msg|
+      "[#{datetime.strftime('%Y-%m-%d %H:%M:%S')} ##{Fiber.current.object_id}] -- : #{msg}\n"
+    end
+  end
+
+  before(:all) do
+    ActiveRecord::Base.logger = LOGGER if ENV['LOGGER']
+  end
 
   def establish_connection
-      ActiveRecord::Base.establish_connection(
-        :adapter => 'em_mysql2',
-        :database => 'widgets',
-        :username => 'root',
-        :pool => 10
-      )
-      Widget.delete_all
+    ActiveRecord::Base.establish_connection(
+      :adapter => 'em_mysql2',
+      :database => 'widgets',
+      :username => 'root',
+      :pool => 10
+    )
+    Widget.delete_all
   end
 
   it "should establish AR connection" do
