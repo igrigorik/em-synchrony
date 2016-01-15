@@ -98,6 +98,7 @@ describe "Fiberized ActiveRecord driver for mysql2" do
             widget.update_attributes title: "hello"
           end
           ActiveRecord::Base.transaction do
+            widget.update_attributes(title: 'hey')
             raise ActiveRecord::Rollback
           end
         end
