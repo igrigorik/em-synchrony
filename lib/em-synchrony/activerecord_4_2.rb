@@ -21,7 +21,7 @@ module EM::Synchrony
     class TransactionManager < ::ActiveRecord::ConnectionAdapters::TransactionManager
       def initialize(*args)
         super
-        @stack = Hash.new([])
+        @stack = Hash.new { |h, k| h[k] = [] }
       end
 
       def current_transaction #:nodoc:
