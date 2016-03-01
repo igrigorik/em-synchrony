@@ -18,6 +18,19 @@ describe EventMachine::Synchrony::FiberIterator do
     end
   end
 
+  it "works even with nested arrays and iterator" do
+    EM.synchrony do
+      results = []
+      list = [[1, 2], [3, 4]]
+
+      EM::Synchrony::FiberIterator.new(list, 2).each { |sublist, iter| results.push(sublist) }
+
+      expect(results).to eq(list)
+
+      EM.stop
+    end
+  end
+
   #
   # it "should sum values within the iterator" do
   #   EM.synchrony do
