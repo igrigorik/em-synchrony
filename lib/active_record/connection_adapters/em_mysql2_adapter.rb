@@ -41,7 +41,12 @@ module ActiveRecord
         include EM::Synchrony::ActiveRecord::Client
       end
 
-      include EM::Synchrony::ActiveRecord::Adapter
+      if ::ActiveRecord.version >= Gem::Version.new('4.2')
+        require 'em-synchrony/activerecord_4_2'
+        include EM::Synchrony::ActiveRecord::Adapter_4_2
+      else
+        include EM::Synchrony::ActiveRecord::Adapter
+      end
     end
   end
 end
