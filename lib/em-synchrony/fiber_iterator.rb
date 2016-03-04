@@ -7,7 +7,7 @@ module EventMachine
       # and auto-advance the iterator after each call
       def each(foreach=nil, after=nil, &blk)
         fe = Proc.new do |obj, iter|
-          Fiber.new { (foreach || blk).call(obj); iter.next }.resume
+          Fiber.new { (foreach || blk).call(obj, iter); iter.next }.resume
         end
 
         super(fe, after)
