@@ -11,7 +11,7 @@ group :development do
   gem 'activerecord', "= #{ENV['activerecord'] || '4.1.8'}"
   gem 'em-mongo'
   gem 'bson_ext'
-  gem 'mysql2'
+  gem 'mysql2', '~> 0.3.18'
   gem 'em-redis', '~> 0.3.0'
   gem 'em-hiredis'
   gem 'mongo'
