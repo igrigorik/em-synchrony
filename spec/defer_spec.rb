@@ -30,7 +30,7 @@ describe EventMachine::Synchrony do
         3
       end
       
-      EM::Synchrony.defer(op).should == 3
+      EM::S.defer(op).should == 3
       x.should == 2
               
       EM.stop
