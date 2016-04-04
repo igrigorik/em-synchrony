@@ -15,6 +15,7 @@ require "em-synchrony/tcpsocket"
 require "em-synchrony/connection_pool"
 require "em-synchrony/keyboard"
 require "em-synchrony/iterator"  if EventMachine::VERSION > '0.12.10'
+require "em-synchrony/kernel"
 
 module EventMachine
 
@@ -128,6 +129,15 @@ module EventMachine
       fiber = Fiber.current
       EM.system(cmd, *args){ |out, status| fiber.resume( [out, status] ) }
       Fiber.yield
+    end
+
+    # Overrides behavior of kernel.sleep
+    # Allows to add custom behavior, e.g. logging or redirection to
+    # EM::Synchrony.sleep .
+    # Calling 'sleep' in this function calls the actual kernel method.
+    #
+    def self.on_sleep(&blk)
+      Kernel.em_synchrony_sleep_hook = blk
     end
 
     # Routes to EM::Synchrony::Keyboard
