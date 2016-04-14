@@ -14,6 +14,18 @@ describe EventMachine::Synchrony do
         EM::Synchrony.on_sleep { fail 'should not happen' }
         expect { sleep(0.01) }.not_to raise_error
       end
+
+      it 'works when calling with no arguments' do
+        t = Thread.new do
+          expect { sleep }.to_not raise_error
+        end
+        while t.status
+          if t.status == 'sleep'
+            t.run
+          end
+        end
+        t.join
+      end
       context 'with synchrony in another thread'do
         before do
           @thread = Thread.new do

@@ -10,18 +10,18 @@ module Kernel
   end
 
   # Monkey-patch
-  def sleep(sleep_time)
+  def sleep(*args)
     if Kernel.em_synchrony_sleep_hook &&
        EM.reactor_thread? &&
        !Thread.current[:em_synchrony_sleep_hook_called]
       begin
         Thread.current[:em_synchrony_sleep_hook_called] = true
-        Kernel.em_synchrony_sleep_hook.call(sleep_time)
+        Kernel.em_synchrony_sleep_hook.call(args[0])
       ensure
         Thread.current[:em_synchrony_sleep_hook_called] = false
       end
     else
-      orig_sleep(sleep_time)
+      orig_sleep(*args)
     end
   end
 end
