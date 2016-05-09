@@ -1,6 +1,7 @@
 require "spec/helper/all"
 require "em-synchrony/activerecord"
 require "em-synchrony/fiber_iterator"
+require "logger"
 
 # mysql < spec/widgets.sql
 
