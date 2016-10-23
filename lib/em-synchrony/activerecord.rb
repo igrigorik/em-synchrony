@@ -7,13 +7,11 @@ require 'em-synchrony/thread'
 module ActiveRecord
   module ConnectionAdapters
     class ConnectionPool
-      def connection_with_synchrony
-        _fibered_mutex.synchronize { connection_without_synchrony }
+      def connection
+        _fibered_mutex.synchronize do
+          @reserved_connections[current_connection_id] ||= checkout
+        end
       end
-
-      alias_method_chain :connection, :synchrony
-
-      private
 
       def _fibered_mutex
         @fibered_mutex ||= EM::Synchrony::Thread::Mutex.new
