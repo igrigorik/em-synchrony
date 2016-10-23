@@ -9,7 +9,11 @@ module ActiveRecord
     class ConnectionPool
       def connection
         _fibered_mutex.synchronize do
-          @reserved_connections[current_connection_id] ||= checkout
+          if Gem::Version.new(::ActiveRecord::VERSION::STRING) >= Gem::Version.new('5.0')
+            @thread_cached_conns[connection_cache_key(Thread.current)] ||= checkout
+          else
+            @reserved_connections[current_connection_id] ||= checkout
+          end
         end
       end
 
