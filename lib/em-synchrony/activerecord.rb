@@ -7,11 +7,15 @@ require 'em-synchrony/thread'
 module ActiveRecord
   module ConnectionAdapters
     class ConnectionPool
-      def connection
-        _fibered_mutex.synchronize do
-          if Gem::Version.new(::ActiveRecord::VERSION::STRING) >= Gem::Version.new('5.0')
+      if Gem::Version.new(::ActiveRecord::VERSION::STRING) >= Gem::Version.new('5.0')
+        def connection
+          _fibered_mutex.synchronize do
             @thread_cached_conns[connection_cache_key(Thread.current)] ||= checkout
-          else
+          end
+        end
+      else
+        def connection
+          _fibered_mutex.synchronize do
             @reserved_connections[current_connection_id] ||= checkout
           end
         end
