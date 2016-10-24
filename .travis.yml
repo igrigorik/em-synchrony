@@ -23,6 +23,9 @@ matrix:
       script: "bundle exec rspec spec/activerecord_spec.rb"
     - env: "activerecord=4.2.0"
       script: "bundle exec rspec spec/activerecord_spec.rb"
+    - rvm: 2.3.1
+      env: "activerecord=5.0.0"
+      script: "bundle exec rspec spec/activerecord_spec.rb"
   allow_failures:
     - env: "activerecord=3.2.21"
     - env: "activerecord=4.2.0"
