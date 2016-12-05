@@ -108,6 +108,26 @@ module EventMachine
         Fiber.new { blk.call }.resume
       end
     end
+    
+    # Fiber-aware EventMachine timer: wraps the passed in
+    # block within a new fiber (new fiber on every invocation)
+    # to allow you to continue using synchrony methods.
+    # Prevents simultaneous execution of the same block.
+    # @raise [ArgumentError] if the same block is added twice.
+    def self.add_locked_periodic_timer(interval, &blk)
+      mutex = Mutex.new
+      EM.add_periodic_timer(interval) do
+        if mutex.try_lock
+          Fiber.new {
+            begin
+              blk.call
+            ensure
+              mutex.unlock
+            end
+          }.resume
+        end
+      end
+    end
 
     # Fiber-aware EM.next_tick convenience function
     #
