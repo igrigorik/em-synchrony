@@ -13,6 +13,7 @@ Gem::Specification.new do |s|
   s.description = s.summary
 
   s.add_runtime_dependency("eventmachine", ">= 1.0.0.beta.1")
+  s.add_dependency "em-http-request"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
