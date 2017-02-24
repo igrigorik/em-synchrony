@@ -484,4 +484,14 @@ describe EventMachine::Synchrony::TCPSocket  do
       end
     end
   end
+
+  it "should work when wrapped in a connection pool" do
+    EventMachine.synchrony do
+      @socket = EventMachine::Synchrony::ConnectionPool.new(size: 1) do
+        EventMachine::Synchrony::TCPSocket.new 'eventmachine.rubyforge.org', 80
+      end
+      @socket.send("PING").class.should be(Fixnum)
+      EM.stop
+    end
+  end
 end

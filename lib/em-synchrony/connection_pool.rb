@@ -89,6 +89,15 @@ module EventMachine
             df
           end
         end
+
+        # Handle cases where the connection overrides #send
+        #
+        # Otherwise, our method_missing would proxy the
+        # wrong method call (the first argument) instead of proxying
+        # to connection#send
+        def send(*)
+          super
+        end
     end
 
   end
