@@ -24,7 +24,7 @@ module ActiveRecord
         variable_assignments << "NAMES '#{encoding}'" if encoding
 
         wait_timeout = config[:wait_timeout]
-        wait_timeout = 2592000 unless wait_timeout.is_a?(Fixnum)
+        wait_timeout = 2592000 unless wait_timeout.is_a?(Integer)
         variable_assignments << "@@wait_timeout = #{wait_timeout}"
 
         conn.query("SET #{variable_assignments.join(', ')}")
